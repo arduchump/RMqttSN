@@ -17,15 +17,13 @@
 cmake_minimum_required(VERSION 2.6)
 
 set(CMAKE_TOOLCHAIN_FILE avr-gcc.cmake)
+set(CMAKE_SYSTEM_NAME Generic)
 
-project(housahedron)
+project(mqttsn-arduino)
 
 include_directories(
     ${ARDUINO_LIBRARY_PATH}/cores/arduino
     ${ARDUINO_LIBRARY_PATH}/variants/standard
-    ${CMAKE_SOURCE_DIR}/JeeLib
-    ${CMAKE_SOURCE_DIR}/OneWire
-    ${CMAKE_SOURCE_DIR}/EEPROM
 )
 
 # Using the Arduino IDE libraries, we may need to define one or more of the
@@ -35,8 +33,8 @@ add_definitions(-DF_CPU=16000000L)
 add_definitions(-MMD)
 add_definitions(-DARDUINO=105)
 
-add_subdirectory(arduino_core)
-add_subdirectory(OneWire)
-add_subdirectory(JeeLib)
-add_subdirectory(EEPROM)
-add_subdirectory(src)
+set(MQTTSN_SOURCES
+    src/mqttsn-messages.cpp
+)
+
+add_avr_library(mqttsn-arduino ${MQTTSN_SOURCES})
