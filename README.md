@@ -42,6 +42,10 @@ Most of the handler functions are stubs, but a few of them deal with return
 code checking, topic registration and so on, so you should call the base class
 implementation of the handler before any custom code.
 
+Virtual functions seem to take significant space in the compiled binary, so if
+you want to shave some bytes off your final build, comment out the handlers
+you're not using in `mqttsn-messages.h` and in `void MQTTSN::dispatch()`
+
 [MQTT-SN]:http://mqtt.org
 [Uno]:http://arduino.cc/en/Main/arduinoBoardUno
 [JeeNode]:http://jeelabs.net

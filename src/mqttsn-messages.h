@@ -1,19 +1,27 @@
 /*
 mqttsn-messages.h
-Copyright (C) 2013 Housahedron
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+The MIT License (MIT)
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+Copyright (C) 2014 John Donovan
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 */
 
 #ifndef __MQTTSN_MESSAGES_H__
@@ -26,25 +34,49 @@ Copyright (C) 2013 Housahedron
 
 class MQTTSN {
 public:
-    MQTTSN();
+    MQTTSN(const bool rf12 = false);
     virtual ~MQTTSN();
 
     uint16_t find_topic_id(const char* name);
     bool wait_for_response();
     void parse_stream();
+#ifdef USE_RF12
+    void parse_rf12();
+#endif
 
+    void searchgw(const uint8_t radius);//
     void connect(const uint8_t flags, const uint16_t duration, const char* client_id);
-    void pingreq(const char* client_id);
-    void disconnect(const uint16_t duration);
+    void willtopic(const uint8_t flags, const char* will_topic, const bool update = false);
+    void willmsg(const void* will_msg, const uint8_t will_msg_len, const bool update = false);
     bool register_topic(const char* name);
+    void regack(const uint16_t topic_id, const uint16_t message_id, const uint8_t return_code);
     void publish(const uint8_t flags, const uint16_t topic_id, const uint16_t message_id, const void* data, const uint8_t data_len);
+    void puback(const uint16_t topic_id, const uint16_t message_id, const uint8_t return_code);
+    void subscribe_by_name(const uint8_t flags, const uint16_t message_id, const char* topic_name);
+    void subscribe_by_id(const uint8_t flags, const uint16_t message_id, const uint16_t topic_id);
+    void unsubscribe_by_name(const uint8_t flags, const uint16_t message_id, const char* topic_name);
+    void unsubscribe_by_id(const uint8_t flags, const uint16_t message_id, const uint16_t topic_id);
+    void pingreq(const char* client_id);
+    void pingresp();
+    void disconnect(const uint16_t duration);
+    void forward(const message_header* msg);
 
 protected:
-    virtual bool connack_handler(msg_connack* msg);
-    virtual void disconnect_handler(msg_disconnect* msg);
-    virtual bool regack_handler(msg_regack* msg);
-    virtual void pingresp_handler();
-    virtual void puback_handler(msg_puback* msg);
+    virtual void advertise_handler(const msg_advertise* msg);
+    virtual void gwinfo_handler(const msg_gwinfo* msg) {}
+    virtual bool connack_handler(const msg_connack* msg);
+    virtual void willtopicreq_handler(const message_header* msg) {}
+    virtual void willmsgreq_handler(const message_header* msg) {}
+    virtual bool regack_handler(const msg_regack* msg);
+    virtual void publish_handler(const msg_publish* msg) {}
+    virtual void puback_handler(const msg_puback* msg) {}
+    virtual void suback_handler(const msg_suback* msg) {}
+    virtual void unsuback_handler(const msg_unsuback* msg) {}
+    virtual void pingreq_handler(const msg_pingreq* msg) {}
+    virtual void pingresp_handler() {}
+    virtual void disconnect_handler(const msg_disconnect* msg) {}
+    virtual void willtopicresp_handler(const msg_willtopicresp* msg) {}
+    virtual void willmsgresp_handler(const msg_willmsgresp* msg) {}
 
 private:
     struct topic {
@@ -59,7 +91,8 @@ private:
     uint16_t bswap(const uint16_t val);
     void send_message();
 
-    // Set to true when we're waiting for some sort of acknowledgement from the server that will transition our state.
+    // Set to true when we're waiting for some sort of acknowledgement from the
+    //server that will transition our state.
     bool waiting_for_response;
     uint16_t reg_msg_id;
     uint8_t topic_count;
@@ -67,6 +100,9 @@ private:
     uint8_t message_buffer[MAX_BUFFER_SIZE];
     uint8_t response_buffer[MAX_BUFFER_SIZE];
     topic topic_table[MAX_TOPICS];
+
+    bool _rf12;
+    uint8_t _gateway_id;
 };
 
 #endif

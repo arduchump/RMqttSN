@@ -1,19 +1,27 @@
 /*
 mqttsn.h
-Copyright (C) 2013 Housahedron
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+The MIT License (MIT)
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+Copyright (C) 2014 John Donovan
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 */
 
 #ifndef _MQTTSN_
@@ -40,8 +48,7 @@ enum message_type {
     ADVERTISE,
     SEARCHGW,
     GWINFO,
-    Reserved1,
-    CONNECT,
+    CONNECT = 0x04,
     CONNACK,
     WILLTOPICREQ,
     WILLTOPIC,
@@ -54,16 +61,14 @@ enum message_type {
     PUBCOMP,
     PUBREC,
     PUBREL,
-    Reserved2,
-    SUBSCRIBE,
+    SUBSCRIBE = 0x12,
     SUBACK,
     UNSUBSCRIBE,
     UNSUBACK,
     PINGREQ,
     PINGRESP,
     DISCONNECT,
-    Reserved3,
-    WILLTOPICUPD,
+    WILLTOPICUPD = 0x1a,
     WILLTOPICRESP,
     WILLMSGUPD,
     WILLMSGRESP
@@ -72,6 +77,20 @@ enum message_type {
 struct message_header {
     uint8_t length;
     message_type type;
+};
+
+struct msg_advertise : public message_header {
+    uint8_t gw_id;
+    uint16_t duration;
+};
+
+struct msg_searchgw : public message_header {
+    uint8_t radius;
+};
+
+struct msg_gwinfo : public message_header {
+    uint8_t gw_id;
+    char gw_add[0];
 };
 
 struct msg_connect : public message_header {
@@ -85,8 +104,13 @@ struct msg_connack : public message_header {
     uint8_t return_code;
 };
 
-struct msg_disconnect : public message_header {
-    uint16_t duration;
+struct msg_willtopic : public message_header {
+    uint8_t flags;
+    char will_topic[0];
+};
+
+struct msg_willmsg : public message_header {
+    char willmsg[0];
 };
 
 struct msg_register : public message_header {
@@ -108,13 +132,75 @@ struct msg_publish : public message_header {
     char data[0];
 };
 
+struct msg_puback : public message_header {
+    uint16_t topic_id;
+    uint16_t message_id;
+    uint8_t return_code;
+};
+
+struct msg_pubrec : public message_header {
+    uint16_t message_id;
+};
+
+struct msg_pubrel : public message_header {
+    uint16_t message_id;
+};
+
+struct msg_pubcomp : public message_header {
+    uint16_t message_id;
+};
+
+struct msg_subscribe : public message_header {
+    uint8_t flags;
+    uint16_t message_id;
+    union {
+        char topic_name[0];
+        uint16_t topic_id;
+    };
+};
+
+struct msg_suback : public message_header {
+    uint8_t flags;
+    uint16_t topic_id;
+    uint16_t message_id;
+    uint8_t return_code;
+};
+
+struct msg_unsubscribe : public message_header {
+    uint8_t flags;
+    uint16_t message_id;
+    union {
+        char topic_name[0];
+        uint16_t topic_id;
+    };
+};
+
+struct msg_unsuback : public message_header {
+    uint16_t message_id;
+};
+
 struct msg_pingreq : public message_header {
     char client_id[0];
 };
 
-struct msg_puback : public message_header {
-    uint16_t topic_id;
-    uint16_t message_id;
+struct msg_disconnect : public message_header {
+    uint16_t duration;
+};
+
+struct msg_willtopicupd : public message_header {
+    uint8_t flags;
+    char will_topic[0];
+};
+
+struct msg_willmsgupd : public message_header {
+    char will_msg[0];
+};
+
+struct msg_willtopicresp : public message_header {
+    uint8_t return_code;
+};
+
+struct msg_willmsgresp : public message_header {
     uint8_t return_code;
 };
 
