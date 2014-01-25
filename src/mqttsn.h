@@ -24,8 +24,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef _MQTTSN_
-#define _MQTTSN_
+#ifndef __MQTTSN_H__
+#define __MQTTSN_H__
 
 #define PROTOCOL_ID 0x01
 
@@ -37,12 +37,28 @@ THE SOFTWARE.
 #define FLAG_RETAIN 0x10
 #define FLAG_WILL 0x08
 #define FLAG_CLEAN 0x04
-#define FLAG_TOPIC_ID 0x00
-#define FLAG_TOPIC_PREDEFINED 0x01
+#define FLAG_TOPIC_NAME 0x00
+#define FLAG_TOPIC_PREDEFINED_ID 0x01
 #define FLAG_TOPIC_SHORT_NAME 0x02
 
 #define QOS_MASK (FLAG_QOS_0 | FLAG_QOS_1 | FLAG_QOS_2 | FLAG_QOS_M1)
-#define TOPIC_MASK (FLAG_TOPIC_ID | FLAG_TOPIC_PREDEFINED | FLAG_TOPIC_SHORT_NAME)
+#define TOPIC_MASK (FLAG_TOPIC_NAME | FLAG_TOPIC_PREDEFINED_ID | FLAG_TOPIC_SHORT_NAME)
+
+// Recommended values for timers and counters. All timers are in seconds.
+#define T_ADV 960
+#define N_ADV 3
+#define T_SEARCH_GW 5
+#define T_GW_INFO 5
+#define T_WAIT 360
+#define T_RETRY 15
+#define N_RETRY 5
+
+enum return_code_t {
+    ACCEPTED,
+    REJECTED_CONGESTION,
+    REJECTED_INVALID_TOPIC_ID,
+    REJECTED_NOT_SUPPORTED
+};
 
 enum message_type {
     ADVERTISE,
@@ -101,7 +117,7 @@ struct msg_connect : public message_header {
 };
 
 struct msg_connack : public message_header {
-    uint8_t return_code;
+    return_code_t return_code;
 };
 
 struct msg_willtopic : public message_header {
@@ -122,7 +138,7 @@ struct msg_register : public message_header {
 struct msg_regack : public message_header {
     uint16_t topic_id;
     uint16_t message_id;
-    uint8_t return_code;
+    return_code_t return_code;
 };
 
 struct msg_publish : public message_header {
@@ -135,18 +151,10 @@ struct msg_publish : public message_header {
 struct msg_puback : public message_header {
     uint16_t topic_id;
     uint16_t message_id;
-    uint8_t return_code;
+    return_code_t return_code;
 };
 
-struct msg_pubrec : public message_header {
-    uint16_t message_id;
-};
-
-struct msg_pubrel : public message_header {
-    uint16_t message_id;
-};
-
-struct msg_pubcomp : public message_header {
+struct msg_pubqos2 : public message_header {
     uint16_t message_id;
 };
 
@@ -163,7 +171,7 @@ struct msg_suback : public message_header {
     uint8_t flags;
     uint16_t topic_id;
     uint16_t message_id;
-    uint8_t return_code;
+    return_code_t return_code;
 };
 
 struct msg_unsubscribe : public message_header {
@@ -187,21 +195,12 @@ struct msg_disconnect : public message_header {
     uint16_t duration;
 };
 
-struct msg_willtopicupd : public message_header {
-    uint8_t flags;
-    char will_topic[0];
-};
-
-struct msg_willmsgupd : public message_header {
-    char will_msg[0];
-};
-
 struct msg_willtopicresp : public message_header {
-    uint8_t return_code;
+    return_code_t return_code;
 };
 
 struct msg_willmsgresp : public message_header {
-    uint8_t return_code;
+    return_code_t return_code;
 };
 
 #endif

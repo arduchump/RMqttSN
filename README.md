@@ -31,9 +31,14 @@ in your main project.
 
 Usage
 -----
-To use UART serial comms, implement `void serialEvent()` - which is part of the
-standard Arduino library and gets called whenever there is incoming data on the
-serial line - and call `MQTTSN::parse_stream()`
+To use UART serial comms, define `USE_SERIAL` on the command line, and
+implement `void serialEvent()` - which is part of the standard Arduino library
+and gets called whenever there is incoming data on the serial line - and call
+`MQTTSN::parse_stream()`
+
+To use an RF12B module, you need the JeeNode library installed, and to define
+`USE_RF12B` on the command line. Then call `MQTTSN::parse_rf12()` as part of
+your normal loop.
 
 Subclass MQTTSN and override some, all, or none of the handler virtual
 functions to get data from the broker or to change application state.
@@ -45,6 +50,32 @@ implementation of the handler before any custom code.
 Virtual functions seem to take significant space in the compiled binary, so if
 you want to shave some bytes off your final build, comment out the handlers
 you're not using in `mqttsn-messages.h` and in `void MQTTSN::dispatch()`
+
+Message IDs are generated sequentially, and as per the spec, there is no
+provision to queue up messages between acknowledgements; so if you call
+REGISTER or PUBLISH with QoS1 or QoS2, you must wait for its corresponding
+REGACK/PUBACK before issuing another message.
+
+QoS1 is handled, and the library will wait for a relevant ACK with the
+recommended delay and number of retries. If it still cannot get an ACK after
+retrying, `MQTTSN::disconnect_handler()` is called (with a `NULL` pointer as
+the message) which you should override and use to handle reconnection.
+
+Due to it's relative complexity, QoS2 handshaking isn't handled (but the
+message handlers are there, they need enabling by defining `USE_QOS2` on the
+command line), and so it should be part of your own code if you want it.
+
+Please file any bug reports in the issue tracker, or better yet fork and fix!
+
+TODO
+----
+
+- Forwarding
+- Buffer overrun checking
+- Congestion handling
+- More conditional compilation for different features
+- Examples
+- Tests
 
 [MQTT-SN]:http://mqtt.org
 [Uno]:http://arduino.cc/en/Main/arduinoBoardUno

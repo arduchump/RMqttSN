@@ -32,12 +32,11 @@ include_directories(
     ${ARDUINO_LIBRARY_PATH}/variants/standard
 )
 
-# Using the Arduino IDE libraries, we may need to define one or more of the
-# following: -DUSB_VID=null -DUSB_PID=null
-
 add_definitions(-DF_CPU=16000000L)
 add_definitions(-MMD)
 add_definitions(-DARDUINO=105)
+#add_definitions(-DUSE_RF12)
+add_definitions(-DUSE_SERIAL)
 
 set(MQTTSN_SOURCES
     src/mqttsn-messages.cpp
