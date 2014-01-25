@@ -31,13 +31,14 @@ in your main project.
 
 Usage
 -----
-To use UART serial comms, define `USE_SERIAL` on the command line, and
+To use UART serial comms, define `USE_SERIAL` on the command line (or if you're
+using the Arduino IDE, it can be defined before you include the headers), and
 implement `void serialEvent()` - which is part of the standard Arduino library
 and gets called whenever there is incoming data on the serial line - and call
 `MQTTSN::parse_stream()`
 
 To use an RF12B module, you need the JeeNode library installed, and to define
-`USE_RF12B` on the command line. Then call `MQTTSN::parse_rf12()` as part of
+`USE_RF12` on the command line. Then call `MQTTSN::parse_rf12()` as part of
 your normal loop.
 
 Subclass MQTTSN and override some, all, or none of the handler virtual
