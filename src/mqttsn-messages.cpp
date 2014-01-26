@@ -116,7 +116,6 @@ void MQTTSN::parse_rf12() {
 
 void MQTTSN::dispatch() {
     message_header* response_message = (message_header*)response_buffer;
-    waiting_for_response = false;
 
     switch (response_message->type) {
     case ADVERTISE:
@@ -184,11 +183,10 @@ void MQTTSN::dispatch() {
         break;
 
     default:
-        // We've got a message we aren't programmed to receive, so just carry
-        // on listening.
-        waiting_for_response = true;
         return;
     }
+
+    waiting_for_response = false;
 }
 
 void MQTTSN::send_message() {
