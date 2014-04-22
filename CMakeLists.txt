@@ -28,8 +28,9 @@ set(CMAKE_SYSTEM_NAME Generic)
 project(mqttsn-arduino)
 
 include_directories(
-    ${ARDUINO_LIBRARY_PATH}/cores/arduino
-    ${ARDUINO_LIBRARY_PATH}/variants/standard
+    ${ARDUINO_CORE_PATH}/cores/arduino
+    ${ARDUINO_CORE_PATH}/variants/standard
+    ${ARDUINO_LIBRARIES_PATH}/JeeLib
 )
 
 add_definitions(-DF_CPU=16000000L)
@@ -37,6 +38,9 @@ add_definitions(-MMD)
 add_definitions(-DARDUINO=105)
 add_definitions(-DUSE_RF12)
 #add_definitions(-DUSE_SERIAL)
+
+add_subdirectory(arduino-core)
+add_subdirectory(JeeLib)
 
 set(MQTTSN_SOURCES
     src/mqttsn-messages.cpp

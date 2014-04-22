@@ -61,9 +61,15 @@ set(
 )
 
 set(
-    ARDUINO_LIBRARY_PATH
+    ARDUINO_CORE_PATH
     CACHE STRING
-    "Path to the standard Arduino libraries."
+    "Path to the core Arduino libraries."
+)
+
+set(
+    ARDUINO_LIBRARIES_PATH
+    CACHE STRING
+    "Path to the 3rd-party Arduino libraries."
 )
 
 function(_avr_get_mcu_list NAME OUTVAR)

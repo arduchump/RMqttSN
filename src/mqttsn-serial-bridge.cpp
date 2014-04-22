@@ -33,9 +33,11 @@ THE SOFTWARE.
 #include <Ports.h>
 
 #define ADVERTISE_INTERVAL 10
+#define RF_CHANNEL 111
 
 uint8_t response_buffer[RF12_MAXDATA];
 msg_advertise adv;
+const uint8_t node_id = 1;
 
 void serialEvent() {
     if (Serial.available() > 0) {
@@ -67,7 +69,7 @@ void setup() {
     adv.gw_id = node_id;
     adv.duration = ADVERTISE_INTERVAL;
 
-    rf12_initialize(1, RF12_868MHZ, RF_CHANNEL);
+    rf12_initialize(node_id, RF12_868MHZ, RF_CHANNEL);
 }
 
 int main() {

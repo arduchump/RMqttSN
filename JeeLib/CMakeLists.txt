@@ -21,20 +21,20 @@
 # THE SOFTWARE.
 
 set(SOURCES
-    JeeLib.h
-    PortsBMP085.cpp
-    PortsBMP085.h
-    Ports.cpp
-    Ports.h
-    PortsLCD.cpp
-    PortsLCD.h
-    PortsRF12.cpp
-    PortsSHT11.cpp
-    PortsSHT11.h
-    RF12.cpp
-    RF12.h
-    RF12sio.cpp
-    RF12sio.h
+    ${ARDUINO_LIBRARIES_PATH}/JeeLib/JeeLib.h
+    ${ARDUINO_LIBRARIES_PATH}/JeeLib/PortsBMP085.cpp
+    ${ARDUINO_LIBRARIES_PATH}/JeeLib/PortsBMP085.h
+    ${ARDUINO_LIBRARIES_PATH}/JeeLib/Ports.cpp
+    ${ARDUINO_LIBRARIES_PATH}/JeeLib/Ports.h
+    ${ARDUINO_LIBRARIES_PATH}/JeeLib/PortsLCD.cpp
+    ${ARDUINO_LIBRARIES_PATH}/JeeLib/PortsLCD.h
+    ${ARDUINO_LIBRARIES_PATH}/JeeLib/PortsRF12.cpp
+    ${ARDUINO_LIBRARIES_PATH}/JeeLib/PortsSHT11.cpp
+    ${ARDUINO_LIBRARIES_PATH}/JeeLib/PortsSHT11.h
+    ${ARDUINO_LIBRARIES_PATH}/JeeLib/RF12.cpp
+    ${ARDUINO_LIBRARIES_PATH}/JeeLib/RF12.h
+    ${ARDUINO_LIBRARIES_PATH}/JeeLib/RF12sio.cpp
+    ${ARDUINO_LIBRARIES_PATH}/JeeLib/RF12sio.h
 )
 
 add_avr_library(JeeLib ${SOURCES})
