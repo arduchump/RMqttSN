@@ -20,35 +20,21 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-cmake_minimum_required(VERSION 2.6)
-
-set(CMAKE_TOOLCHAIN_FILE avr-gcc.cmake)
-set(CMAKE_SYSTEM_NAME Generic)
-
-project(mqttsn-arduino)
-
-include_directories(
-    ${ARDUINO_LIBRARY_PATH}/cores/arduino
-    ${ARDUINO_LIBRARY_PATH}/variants/standard
+set(SOURCES
+    JeeLib.h
+    PortsBMP085.cpp
+    PortsBMP085.h
+    Ports.cpp
+    Ports.h
+    PortsLCD.cpp
+    PortsLCD.h
+    PortsRF12.cpp
+    PortsSHT11.cpp
+    PortsSHT11.h
+    RF12.cpp
+    RF12.h
+    RF12sio.cpp
+    RF12sio.h
 )
 
-add_definitions(-DF_CPU=16000000L)
-add_definitions(-MMD)
-add_definitions(-DARDUINO=105)
-add_definitions(-DUSE_RF12)
-#add_definitions(-DUSE_SERIAL)
-
-set(MQTTSN_SOURCES
-    src/mqttsn-messages.cpp
-)
-
-set(MQTT_BRIDGE_SOURCES
-    src/mqttsn-serial-bridge.cpp
-    src/mqttsn-messages.cpp
-)
-
-add_avr_library(mqttsn-arduino ${MQTTSN_SOURCES})
-add_avr_executable(mqttsn-serial-bridge ${MQTT_BRIDGE_SOURCES})
-
-target_link_avr_libraries(mqttsn-serial-bridge JeeLib core)
-
+add_avr_library(JeeLib ${SOURCES})
