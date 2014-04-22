@@ -38,7 +38,8 @@ THE SOFTWARE.
 #endif
 
 MQTTSN::MQTTSN() :
-waiting_for_response(false),
+waiting_for_response(true),
+response_to_wait_for(ADVERTISE),
 _message_id(0),
 topic_count(0),
 _gateway_id(0),
@@ -116,10 +117,15 @@ void MQTTSN::parse_rf12() {
 
 void MQTTSN::dispatch() {
     message_header* response_message = (message_header*)response_buffer;
+    bool handled = true;
 
     switch (response_message->type) {
     case ADVERTISE:
-        advertise_handler((msg_advertise*)response_buffer);
+        if (waiting_for_response && response_to_wait_for == ADVERTISE) {
+            advertise_handler((msg_advertise*)response_buffer);
+        } else {
+            handled = false;
+        }
         break;
 
     case GWINFO:
@@ -127,7 +133,11 @@ void MQTTSN::dispatch() {
         break;
 
     case CONNACK:
-        connack_handler((msg_connack*)response_buffer);
+        if (waiting_for_response && response_to_wait_for == CONNACK) {
+            connack_handler((msg_connack*)response_buffer);
+        } else {
+            handled = false;
+        }
         break;
 
     case WILLTOPICREQ:
@@ -143,7 +153,11 @@ void MQTTSN::dispatch() {
         break;
 
     case REGACK:
-        regack_handler((msg_regack*)response_buffer);
+        if (waiting_for_response && response_to_wait_for == REGACK) {
+            regack_handler((msg_regack*)response_buffer);
+        } else {
+            handled = false;
+        }
         break;
 
     case PUBLISH:
@@ -151,15 +165,27 @@ void MQTTSN::dispatch() {
         break;
 
     case PUBACK:
-        puback_handler((msg_puback*)response_buffer);
+        if (waiting_for_response && response_to_wait_for == PUBACK) {
+            puback_handler((msg_puback*)response_buffer);
+        } else {
+            handled = false;
+        }
         break;
 
     case SUBACK:
-        suback_handler((msg_suback*)response_buffer);
+        if (waiting_for_response && response_to_wait_for == SUBACK) {
+            suback_handler((msg_suback*)response_buffer);
+        } else {
+            handled = false;
+        }
         break;
 
     case UNSUBACK:
-        unsuback_handler((msg_unsuback*)response_buffer);
+        if (waiting_for_response && response_to_wait_for == UNSUBACK) {
+            unsuback_handler((msg_unsuback*)response_buffer);
+        } else {
+            handled = false;
+        }
         break;
 
     case PINGREQ:
@@ -167,7 +193,11 @@ void MQTTSN::dispatch() {
         break;
 
     case PINGRESP:
-        pingresp_handler();
+        if (waiting_for_response && response_to_wait_for == PINGRESP) {
+            pingresp_handler();
+        } else {
+            handled = false;
+        }
         break;
 
     case DISCONNECT:
@@ -175,18 +205,28 @@ void MQTTSN::dispatch() {
         break;
 
     case WILLTOPICRESP:
-        willtopicresp_handler((msg_willtopicresp*)response_buffer);
+        if (waiting_for_response && response_to_wait_for == WILLTOPICRESP) {
+            willtopicresp_handler((msg_willtopicresp*)response_buffer);
+        } else {
+            handled = false;
+        }
         break;
 
     case WILLMSGRESP:
-        willmsgresp_handler((msg_willmsgresp*)response_buffer);
+        if (waiting_for_response && response_to_wait_for == WILLMSGRESP) {
+            willmsgresp_handler((msg_willmsgresp*)response_buffer);
+        } else {
+            handled = false;
+        }
         break;
 
     default:
         return;
     }
 
-    waiting_for_response = false;
+    if (handled) {
+        waiting_for_response = false;
+    }
 }
 
 void MQTTSN::send_message() {
@@ -214,6 +254,11 @@ void MQTTSN::send_message() {
     }
 }
 
+void MQTTSN::timeout() {
+    waiting_for_response = true;
+    response_to_wait_for = ADVERTISE;
+}
+
 void MQTTSN::advertise_handler(const msg_advertise* msg) {
     _gateway_id = msg->gw_id;
 }
@@ -232,8 +277,21 @@ void MQTTSN::willmsgreq_handler(const message_header* msg) {
 
 void MQTTSN::regack_handler(const msg_regack* msg) {
     if (msg->return_code == 0 && topic_count < MAX_TOPICS && bswap(msg->message_id) == _message_id) {
-        topic_table[topic_count].id = msg->topic_id;
-        ++topic_count;
+        const uint16_t topic_id = bswap(msg->topic_id);
+
+        bool found_topic = false;
+
+        for (uint8_t i = 0; i < topic_count; ++i) {
+            if (topic_table[i].id == topic_id) {
+                found_topic = true;
+                break;
+            }
+        }
+
+        if (!found_topic) {
+            topic_table[topic_count].id = topic_id;
+            ++topic_count;
+        }
     }
 }
 
@@ -311,6 +369,7 @@ void MQTTSN::searchgw(const uint8_t radius) {
 
     send_message();
     waiting_for_response = true;
+    response_to_wait_for = GWINFO;
 }
 
 void MQTTSN::connect(const uint8_t flags, const uint16_t duration, const char* client_id) {
@@ -325,6 +384,7 @@ void MQTTSN::connect(const uint8_t flags, const uint16_t duration, const char* c
 
     send_message();
     waiting_for_response = true;
+    response_to_wait_for = CONNACK;
 }
 
 void MQTTSN::willtopic(const uint8_t flags, const char* will_topic, const bool update) {
@@ -343,9 +403,10 @@ void MQTTSN::willtopic(const uint8_t flags, const char* will_topic, const bool u
 
     send_message();
 
-    if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
-        waiting_for_response = true;
-    }
+//    if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
+//        waiting_for_response = true;
+//        response_to_wait_for = WILLMSGREQ;
+//    }
 }
 
 void MQTTSN::willmsg(const void* will_msg, const uint8_t will_msg_len, const bool update) {
@@ -371,6 +432,7 @@ void MQTTSN::disconnect(const uint16_t duration) {
 
     send_message();
     waiting_for_response = true;
+    response_to_wait_for = DISCONNECT;
 }
 
 bool MQTTSN::register_topic(const char* name) {
@@ -393,6 +455,7 @@ bool MQTTSN::register_topic(const char* name) {
 
         send_message();
         waiting_for_response = true;
+        response_to_wait_for = REGACK;
         return true;
     }
 
@@ -427,6 +490,7 @@ void MQTTSN::publish(const uint8_t flags, const uint16_t topic_id, const void* d
 
     if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
         waiting_for_response = true;
+        response_to_wait_for = PUBACK;
     }
 }
 
@@ -488,6 +552,7 @@ void MQTTSN::subscribe_by_name(const uint8_t flags, const char* topic_name) {
 
     if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
         waiting_for_response = true;
+        response_to_wait_for = SUBACK;
     }
 }
 
@@ -506,6 +571,7 @@ void MQTTSN::subscribe_by_id(const uint8_t flags, const uint16_t topic_id) {
 
     if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
         waiting_for_response = true;
+        response_to_wait_for = SUBACK;
     }
 }
 
@@ -526,6 +592,7 @@ void MQTTSN::unsubscribe_by_name(const uint8_t flags, const char* topic_name) {
 
     if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
         waiting_for_response = true;
+        response_to_wait_for = UNSUBACK;
     }
 }
 
@@ -544,6 +611,7 @@ void MQTTSN::unsubscribe_by_id(const uint8_t flags, const uint16_t topic_id) {
 
     if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
         waiting_for_response = true;
+        response_to_wait_for = UNSUBACK;
     }
 }
 
@@ -556,6 +624,7 @@ void MQTTSN::pingreq(const char* client_id) {
     send_message();
 
     waiting_for_response = true;
+    response_to_wait_for = PINGRESP;
 }
 
 void MQTTSN::pingresp() {

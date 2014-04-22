@@ -65,6 +65,8 @@ public:
     void pingresp();
     void disconnect(const uint16_t duration);
 
+    virtual void timeout();
+
 protected:
     virtual void advertise_handler(const msg_advertise* msg);
     virtual void gwinfo_handler(const msg_gwinfo* msg);
@@ -94,7 +96,7 @@ protected:
 private:
     struct topic {
         const char* name;
-        uint8_t id;
+        uint16_t id;
     };
 
     void dispatch();
@@ -104,6 +106,7 @@ private:
     // Set to true when we're waiting for some sort of acknowledgement from the
     //server that will transition our state.
     bool waiting_for_response;
+    uint8_t response_to_wait_for;
     uint16_t _message_id;
     uint8_t topic_count;
 
