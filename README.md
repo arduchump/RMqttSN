@@ -68,7 +68,7 @@ command line), and so it should be part of your own code if you want it.
 
 Please file any bug reports in the issue tracker, or better yet fork and fix!
 
-mqttsn-client-bridge
+mqttsn-serial-bridge
 --------------------
 This program is used to interface a JeeNode with a serial port.
 
