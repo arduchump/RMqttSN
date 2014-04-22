@@ -68,6 +68,38 @@ command line), and so it should be part of your own code if you want it.
 
 Please file any bug reports in the issue tracker, or better yet fork and fix!
 
+mqttsn-client-bridge
+--------------------
+This program is used to interface a JeeNode with a serial port.
+
+To use it, flash the "base" JeeNode with the code, and hook it up to a serial
+port on your computer or RPi. You will notice a couple of CMakeLists.txt
+files that I've added into JeeNode and arduino-core directories, the build
+system should pick these up and compile and link the two libraries. The
+easiest way I have found to then get it talking to an MQTT-SN broker is to
+use socat:
+
+    socat /dev/ttyUSB0,raw,echo=0,b115200 UDP4:127.0.0.1:1883
+
+Which bridges between the serial port and a TCP/IP UDP port that your broker
+is listening on. Naturally you may have to change the tty device to whichever
+one you've plugged the JeeNode in to.
+
+I've not tried this with a RPi yet, but it is on the list of things to do. The
+only possible problem I can see is that the RPi's serial GPIO doesn't have a
+DTR pin, but I think socat will cope. If not, I'll write a simple bit of
+Python that emulates socat and handles DTR, but I'd rather not!
+
+For my MQTT broker, I am using RSMB because it is the only one I've found that
+handles MQTT-SN. I have a simple config file for it that listens for MQTT-SN
+on port 1883 and MQTT on 1884, thereby acting as a bridge between the two
+protocols:
+
+    listener 1883 INADDR_ANY mqtts
+    listener 1884 INADDR_ANY mqtt
+
+And so from here I can subscribe with any regular MQTT client.
+
 TODO
 ----
 
