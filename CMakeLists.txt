@@ -42,4 +42,13 @@ set(MQTTSN_SOURCES
     src/mqttsn-messages.cpp
 )
 
+set(MQTT_BRIDGE_SOURCES
+    mqttsn-serial-bridge.cpp
+    mqttsn-messages.cpp
+)
+
 add_avr_library(mqttsn-arduino ${MQTTSN_SOURCES})
+add_avr_executable(mqttsn-serial-bridge ${MQTT_BRIDGE_SOURCES})
+
+target_link_avr_libraries(mqttsn-serial-bridge JeeLib EEPROM core)
+
