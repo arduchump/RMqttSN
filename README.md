@@ -20,8 +20,10 @@ If you're cross-compiling from the command line, you'll need:
  - core Arduino libraries. These can be obtained from the arduino-core package
    on most \*NIX systems, or as part of the standard Arduino IDE installation.
 
-Run `ccmake` and set `ARDUINO_LIBRARY_PATH` to the `hardware/arduino` path. For
+Run `ccmake` and set `ARDUINO_CORE_PATH` to the `hardware/arduino` path. For
 instance on Debian-based systems it is `/usr/share/arduino/hardware/arduino`
+`ARDUINO_LIBRARIES_PATH` needs to be set to to wherever you keep 3rd-party
+libraries, typically `/usr/share/arduino/libraries`
 
 The other default values are set for an Arduino [Uno] or a [JeeNode], and will
 probably work on most other ATmega328p based hardware.
