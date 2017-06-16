@@ -28,14 +28,15 @@
 
 #include "FlyMqttSNClient.h"
 
-FlyMqttSNClient::FlyMqttSNClient() :
+FlyMqttSNClient::FlyMqttSNClient(Stream *stream) :
   waiting_for_response(true),
   response_to_wait_for(ADVERTISE),
   _message_id(0),
   topic_count(0),
   _gateway_id(0),
   _response_timer(0),
-  _response_retries(0)
+  _response_retries(0),
+  mStream(stream)
 {
   memset(topic_table, 0, sizeof(topic) * MAX_TOPICS);
   memset(message_buffer, 0, MAX_BUFFER_SIZE);
@@ -94,22 +95,21 @@ FlyMqttSNClient::find_topic_id(const char *name, uint8_t&index)
   return 0xffff;
 }
 
-#ifdef USE_SERIAL
 void
 FlyMqttSNClient::parse_stream()
 {
-  if(Serial.available() > 0)
+  if(mStream->available() > 0)
   {
     uint8_t *response      = response_buffer;
-    uint8_t  packet_length = (uint8_t)Serial.read();
+    uint8_t  packet_length = (uint8_t)mStream->read();
 
     *response++ = packet_length--;
 
     while(packet_length > 0)
     {
-      while(Serial.available() > 0)
+      while(mStream->available() > 0)
       {
-        *response++ = (uint8_t)Serial.read();
+        *response++ = (uint8_t)mStream->read();
         --packet_length;
       }
     }
@@ -117,8 +117,6 @@ FlyMqttSNClient::parse_stream()
     dispatch();
   }
 }
-
-#endif
 
 void
 FlyMqttSNClient::dispatch()
@@ -288,10 +286,8 @@ FlyMqttSNClient::send_message()
 {
   message_header *hdr = reinterpret_cast<message_header *>(message_buffer);
 
-#ifdef USE_SERIAL
-  Serial.write(message_buffer, hdr->length);
-  Serial.flush();
-#endif
+  mStream->write(message_buffer, hdr->length);
+  mStream->flush();
 
   if(!waiting_for_response)
   {

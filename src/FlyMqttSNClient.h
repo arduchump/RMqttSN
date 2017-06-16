@@ -35,7 +35,7 @@
 class FlyMqttSNClient
 {
 public:
-  FlyMqttSNClient();
+  FlyMqttSNClient(Stream *stream);
   virtual
   ~FlyMqttSNClient();
 
@@ -43,10 +43,9 @@ public:
   find_topic_id(const char *name, uint8_t&index);
   bool
   wait_for_response();
-#ifdef USE_SERIAL
+
   void
   parse_stream();
-#endif
 
   void
   searchgw(const uint8_t radius);
@@ -166,6 +165,9 @@ private:
   uint8_t  _gateway_id;
   uint32_t _response_timer;
   uint8_t  _response_retries;
+
+  /// Target stream we will send to.
+  Stream *mStream;
 };
 
 #endif // __INCLUDED_E457D8FE526A11E7AA6EA088B4D1658C

@@ -27,10 +27,7 @@
 #ifndef __INCLUDED_FDCE12F8526A11E7AA6EA088B4D1658C
 #define __INCLUDED_FDCE12F8526A11E7AA6EA088B4D1658C
 
-#include <stdint.h>
-
-// Predefined USE_SERIAL to use serial as our communication line
-#define USE_SERIAL 1
+#include <Arduino.h>
 
 #define PROTOCOL_ID 0x01
 
