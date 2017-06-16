@@ -2,6 +2,7 @@
    The MIT License (MIT)
 
    Copyright (C) 2014 John Donovan
+   Copyright (C) 2017 Hong-She Liang <starofrainnight@gmail.com>
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal
