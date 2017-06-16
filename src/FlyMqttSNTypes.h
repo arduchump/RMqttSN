@@ -27,6 +27,8 @@
 #ifndef __MQTTSN_H__
 #define __MQTTSN_H__
 
+#include <stdint.h>
+
 // Predefined USE_SERIAL to use serial as our communication line
 #define USE_SERIAL 1
 
@@ -134,7 +136,8 @@ const char *message_names[] = {
 
 struct __attribute__ ((__packed__)) message_header
 {
-  uint8_t      length;
+  uint8_t length;
+
   message_type type;
 };
 

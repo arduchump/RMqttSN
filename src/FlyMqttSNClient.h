@@ -27,7 +27,7 @@
 #ifndef __MQTTSN_MESSAGES_H__
 #define __MQTTSN_MESSAGES_H__
 
-#include "mqttsn.h"
+#include "FlyMqttSNTypes.h"
 
 #define MAX_TOPICS      10
 #define MAX_BUFFER_SIZE 66

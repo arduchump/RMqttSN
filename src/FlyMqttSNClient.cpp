@@ -26,8 +26,7 @@
 
 #include <Arduino.h>
 
-#include "mqttsn-messages.h"
-#include "mqttsn.h"
+#include "FlyMqttSNClient.h"
 
 MQTTSN::MQTTSN() :
   waiting_for_response(true),
