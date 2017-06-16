@@ -24,8 +24,8 @@
    THE SOFTWARE.
  */
 
-#ifndef __MQTTSN_MESSAGES_H__
-#define __MQTTSN_MESSAGES_H__
+#ifndef __INCLUDED_E457D8FE526A11E7AA6EA088B4D1658C
+#define __INCLUDED_E457D8FE526A11E7AA6EA088B4D1658C
 
 #include "FlyMqttSNTypes.h"
 
@@ -168,4 +168,4 @@ private:
   uint8_t  _response_retries;
 };
 
-#endif
+#endif // __INCLUDED_E457D8FE526A11E7AA6EA088B4D1658C

@@ -24,8 +24,8 @@
    THE SOFTWARE.
  */
 
-#ifndef __MQTTSN_H__
-#define __MQTTSN_H__
+#ifndef __INCLUDED_FDCE12F8526A11E7AA6EA088B4D1658C
+#define __INCLUDED_FDCE12F8526A11E7AA6EA088B4D1658C
 
 #include <stdint.h>
 
@@ -305,4 +305,4 @@ public message_header
   return_code_t return_code;
 };
 
-#endif
+#endif // __INCLUDED_FDCE12F8526A11E7AA6EA088B4D1658C
