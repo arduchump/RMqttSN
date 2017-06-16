@@ -29,14 +29,6 @@
 #include "mqttsn-messages.h"
 #include "mqttsn.h"
 
-#ifdef USE_RF12
-#include <JeeLib.h>
-#endif
-
-#if !(USE_RF12 || USE_SERIAL)
-#error "You really should define one or both of USE_RF12 or USE_SERIAL."
-#endif
-
 MQTTSN::MQTTSN() :
   waiting_for_response(true),
   response_to_wait_for(ADVERTISE),
@@ -125,17 +117,6 @@ MQTTSN::parse_stream()
 
     dispatch();
   }
-}
-
-#endif
-
-#ifdef USE_RF12
-void
-MQTTSN::parse_rf12()
-{
-  memcpy(response_buffer, (const void *)rf12_data,
-         RF12_MAXDATA < MAX_BUFFER_SIZE ? RF12_MAXDATA : MAX_BUFFER_SIZE);
-  dispatch();
 }
 
 #endif
@@ -308,17 +289,6 @@ MQTTSN::send_message()
 {
   message_header *hdr = reinterpret_cast<message_header *>(message_buffer);
 
-#ifdef USE_RF12
-
-  while(!rf12_canSend())
-  {
-    rf12_recvDone();
-    Sleepy::loseSomeTime(32);
-  }
-
-  rf12_sendStart(_gateway_id, message_buffer, hdr->length);
-  rf12_sendWait(2);
-#endif
 #ifdef USE_SERIAL
   Serial.write(message_buffer, hdr->length);
   Serial.flush();

@@ -47,10 +47,6 @@ public:
   void
   parse_stream();
 #endif
-#ifdef USE_RF12
-  void
-  parse_rf12();
-#endif
 
   void
   searchgw(const uint8_t radius);
