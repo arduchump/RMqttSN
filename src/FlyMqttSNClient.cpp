@@ -337,19 +337,19 @@ FlyMqttSNClient::regackHandler(const FMSNMsgRegack *msg)
   if(msg->returnCode == 0 && mTopicCount < FMSN_MAX_TOPICS &&
      bswap(msg->messageId) == mMessageId)
   {
-    const uint16_t topicId     = bswap(msg->topicId);
-    bool           found_topic = false;
+    const uint16_t topicId    = bswap(msg->topicId);
+    bool           foundTopic = false;
 
     for(uint8_t i = 0; i < mTopicCount; ++i)
     {
       if(mTopicTable[i].id == topicId)
       {
-        found_topic = true;
+        foundTopic = true;
         break;
       }
     }
 
-    if(!found_topic)
+    if(!foundTopic)
     {
       mTopicTable[mTopicCount].id = topicId;
       ++mTopicCount;
@@ -504,14 +504,14 @@ FlyMqttSNClient::willtopic(const uint8_t flags, const char *willTopic,
 
     msg->type  = update ? FMSNMT_WILLTOPICUPD : FMSNMT_WILLTOPIC;
     msg->flags = flags;
-    strcpy(msg->will_topic, willTopic);
+    strcpy(msg->willTopic, willTopic);
   }
 
   sendMessage();
 
 //    if ((flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_1 || (flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_2) {
-//        waiting_for_response = true;
-//        response_to_wait_for = WILLMSGREQ;
+//        waitingForResponse = true;
+//        responseToWaitFor = WILLMSGREQ;
 //    }
 }
 

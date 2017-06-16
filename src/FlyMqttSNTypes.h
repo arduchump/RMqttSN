@@ -145,7 +145,7 @@ public FMSNMsgHeader
 {
   uint8_t flags;
 
-  char will_topic[0];
+  char willTopic[0];
 };
 
 struct __attribute__ ((__packed__)) FMSNMsgWillmsg:
