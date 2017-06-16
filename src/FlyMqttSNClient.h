@@ -1,6 +1,4 @@
 /*
-   mqttsn-messages.h
-
    The MIT License (MIT)
 
    Copyright (C) 2014 John Donovan
