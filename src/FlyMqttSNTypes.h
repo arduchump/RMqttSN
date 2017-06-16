@@ -98,42 +98,6 @@ enum __attribute__ ((__packed__)) message_type
   WILLMSGRESP
 };
 
-#if DEBUG
-const char *message_names[] = {
-  "ADVERTISE",
-  "SEARCHGW",
-  "GWINFO",
-  "unknown",
-  "CONNECT",
-  "CONNACK",
-  "WILLTOPICREQ",
-  "WILLTOPIC",
-  "WILLMSGREQ",
-  "WILLMSG",
-  "REGISTER",
-  "REGACK",
-  "PUBLISH",
-  "PUBACK",
-  "PUBCOMP",
-  "PUBREC",
-  "PUBREL",
-  "unknown",
-  "SUBSCRIBE",
-  "SUBACK",
-  "UNSUBSCRIBE",
-  "UNSUBACK",
-  "PINGREQ",
-  "PINGRESP",
-  "DISCONNECT",
-  "unknown",
-  "WILLTOPICUPD",
-  "WILLTOPICRESP",
-  "WILLMSGUPD",
-  "WILLMSGRESP"
-};
-
-#endif
-
 struct __attribute__ ((__packed__)) message_header
 {
   uint8_t length;
