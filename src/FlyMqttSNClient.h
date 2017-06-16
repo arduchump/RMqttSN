@@ -32,12 +32,12 @@
 #define MAX_TOPICS      10
 #define MAX_BUFFER_SIZE 66
 
-class MQTTSN
+class FlyMqttSNClient
 {
 public:
-  MQTTSN();
+  FlyMqttSNClient();
   virtual
-  ~MQTTSN();
+  ~FlyMqttSNClient();
 
   uint16_t
   find_topic_id(const char *name, uint8_t&index);

@@ -28,7 +28,7 @@
 
 #include "FlyMqttSNClient.h"
 
-MQTTSN::MQTTSN() :
+FlyMqttSNClient::FlyMqttSNClient() :
   waiting_for_response(true),
   response_to_wait_for(ADVERTISE),
   _message_id(0),
@@ -42,12 +42,12 @@ MQTTSN::MQTTSN() :
   memset(response_buffer, 0, MAX_BUFFER_SIZE);
 }
 
-MQTTSN::~MQTTSN()
+FlyMqttSNClient::~FlyMqttSNClient()
 {
 }
 
 bool
-MQTTSN::wait_for_response()
+FlyMqttSNClient::wait_for_response()
 {
   if(waiting_for_response)
   {
@@ -74,13 +74,13 @@ MQTTSN::wait_for_response()
 }
 
 uint16_t
-MQTTSN::bswap(const uint16_t val)
+FlyMqttSNClient::bswap(const uint16_t val)
 {
   return (val << 8) | (val >> 8);
 }
 
 uint16_t
-MQTTSN::find_topic_id(const char *name, uint8_t&index)
+FlyMqttSNClient::find_topic_id(const char *name, uint8_t&index)
 {
   for(uint8_t i = 0; i < topic_count; ++i)
   {
@@ -96,7 +96,7 @@ MQTTSN::find_topic_id(const char *name, uint8_t&index)
 
 #ifdef USE_SERIAL
 void
-MQTTSN::parse_stream()
+FlyMqttSNClient::parse_stream()
 {
   if(Serial.available() > 0)
   {
@@ -121,7 +121,7 @@ MQTTSN::parse_stream()
 #endif
 
 void
-MQTTSN::dispatch()
+FlyMqttSNClient::dispatch()
 {
   message_header *response_message = (message_header *)response_buffer;
   bool handled = true;
@@ -284,7 +284,7 @@ MQTTSN::dispatch()
 }
 
 void
-MQTTSN::send_message()
+FlyMqttSNClient::send_message()
 {
   message_header *hdr = reinterpret_cast<message_header *>(message_buffer);
 
@@ -304,40 +304,40 @@ MQTTSN::send_message()
 }
 
 void
-MQTTSN::timeout()
+FlyMqttSNClient::timeout()
 {
   waiting_for_response = true;
   response_to_wait_for = ADVERTISE;
 }
 
 void
-MQTTSN::advertise_handler(const msg_advertise *msg)
+FlyMqttSNClient::advertise_handler(const msg_advertise *msg)
 {
   _gateway_id = msg->gw_id;
 }
 
 void
-MQTTSN::gwinfo_handler(const msg_gwinfo *msg)
+FlyMqttSNClient::gwinfo_handler(const msg_gwinfo *msg)
 {
 }
 
 void
-MQTTSN::connack_handler(const msg_connack *msg)
+FlyMqttSNClient::connack_handler(const msg_connack *msg)
 {
 }
 
 void
-MQTTSN::willtopicreq_handler(const message_header *msg)
+FlyMqttSNClient::willtopicreq_handler(const message_header *msg)
 {
 }
 
 void
-MQTTSN::willmsgreq_handler(const message_header *msg)
+FlyMqttSNClient::willmsgreq_handler(const message_header *msg)
 {
 }
 
 void
-MQTTSN::regack_handler(const msg_regack *msg)
+FlyMqttSNClient::regack_handler(const msg_regack *msg)
 {
   if(msg->return_code == 0 && topic_count < MAX_TOPICS &&
      bswap(msg->message_id) == _message_id)
@@ -363,7 +363,7 @@ MQTTSN::regack_handler(const msg_regack *msg)
 }
 
 void
-MQTTSN::puback_handler(const msg_puback *msg)
+FlyMqttSNClient::puback_handler(const msg_puback *msg)
 {
 }
 
@@ -386,33 +386,33 @@ MQTTSN::pubcomp_handler(const msg_pubqos2 *msg)
 #endif
 
 void
-MQTTSN::pingreq_handler(const msg_pingreq *msg)
+FlyMqttSNClient::pingreq_handler(const msg_pingreq *msg)
 {
   pingresp();
 }
 
 void
-MQTTSN::suback_handler(const msg_suback *msg)
+FlyMqttSNClient::suback_handler(const msg_suback *msg)
 {
 }
 
 void
-MQTTSN::unsuback_handler(const msg_unsuback *msg)
+FlyMqttSNClient::unsuback_handler(const msg_unsuback *msg)
 {
 }
 
 void
-MQTTSN::disconnect_handler(const msg_disconnect *msg)
+FlyMqttSNClient::disconnect_handler(const msg_disconnect *msg)
 {
 }
 
 void
-MQTTSN::pingresp_handler()
+FlyMqttSNClient::pingresp_handler()
 {
 }
 
 void
-MQTTSN::publish_handler(const msg_publish *msg)
+FlyMqttSNClient::publish_handler(const msg_publish *msg)
 {
   if(msg->flags & FLAG_QOS_1)
   {
@@ -433,7 +433,7 @@ MQTTSN::publish_handler(const msg_publish *msg)
 }
 
 void
-MQTTSN::register_handler(const msg_register *msg)
+FlyMqttSNClient::register_handler(const msg_register *msg)
 {
   return_code_t ret = REJECTED_INVALID_TOPIC_ID;
   uint8_t       index;
@@ -450,17 +450,17 @@ MQTTSN::register_handler(const msg_register *msg)
 }
 
 void
-MQTTSN::willtopicresp_handler(const msg_willtopicresp *msg)
+FlyMqttSNClient::willtopicresp_handler(const msg_willtopicresp *msg)
 {
 }
 
 void
-MQTTSN::willmsgresp_handler(const msg_willmsgresp *msg)
+FlyMqttSNClient::willmsgresp_handler(const msg_willmsgresp *msg)
 {
 }
 
 void
-MQTTSN::searchgw(const uint8_t radius)
+FlyMqttSNClient::searchgw(const uint8_t radius)
 {
   msg_searchgw *msg = reinterpret_cast<msg_searchgw *>(message_buffer);
 
@@ -474,8 +474,8 @@ MQTTSN::searchgw(const uint8_t radius)
 }
 
 void
-MQTTSN::connect(const uint8_t flags, const uint16_t duration,
-                const char *client_id)
+FlyMqttSNClient::connect(const uint8_t flags, const uint16_t duration,
+                         const char *client_id)
 {
   msg_connect *msg = reinterpret_cast<msg_connect *>(message_buffer);
 
@@ -492,8 +492,8 @@ MQTTSN::connect(const uint8_t flags, const uint16_t duration,
 }
 
 void
-MQTTSN::willtopic(const uint8_t flags, const char *will_topic,
-                  const bool update)
+FlyMqttSNClient::willtopic(const uint8_t flags, const char *will_topic,
+                           const bool update)
 {
   if(will_topic == NULL)
   {
@@ -520,8 +520,8 @@ MQTTSN::willtopic(const uint8_t flags, const char *will_topic,
 }
 
 void
-MQTTSN::willmsg(const void *will_msg, const uint8_t will_msg_len,
-                const bool update)
+FlyMqttSNClient::willmsg(const void *will_msg, const uint8_t will_msg_len,
+                         const bool update)
 {
   msg_willmsg *msg = reinterpret_cast<msg_willmsg *>(message_buffer);
 
@@ -533,7 +533,7 @@ MQTTSN::willmsg(const void *will_msg, const uint8_t will_msg_len,
 }
 
 void
-MQTTSN::disconnect(const uint16_t duration)
+FlyMqttSNClient::disconnect(const uint16_t duration)
 {
   msg_disconnect *msg = reinterpret_cast<msg_disconnect *>(message_buffer);
 
@@ -552,7 +552,7 @@ MQTTSN::disconnect(const uint16_t duration)
 }
 
 bool
-MQTTSN::register_topic(const char *name)
+FlyMqttSNClient::register_topic(const char *name)
 {
   if(!waiting_for_response && topic_count < (MAX_TOPICS - 1))
   {
@@ -582,8 +582,8 @@ MQTTSN::register_topic(const char *name)
 }
 
 void
-MQTTSN::regack(const uint16_t topic_id, const uint16_t message_id,
-               const return_code_t return_code)
+FlyMqttSNClient::regack(const uint16_t topic_id, const uint16_t message_id,
+                        const return_code_t return_code)
 {
   msg_regack *msg = reinterpret_cast<msg_regack *>(message_buffer);
 
@@ -597,8 +597,8 @@ MQTTSN::regack(const uint16_t topic_id, const uint16_t message_id,
 }
 
 void
-MQTTSN::publish(const uint8_t flags, const uint16_t topic_id, const void *data,
-                const uint8_t data_len)
+FlyMqttSNClient::publish(const uint8_t flags, const uint16_t topic_id,
+                         const void *data, const uint8_t data_len)
 {
   ++_message_id;
 
@@ -660,8 +660,8 @@ MQTTSN::pubcomp()
 #endif
 
 void
-MQTTSN::puback(const uint16_t topic_id, const uint16_t message_id,
-               const return_code_t return_code)
+FlyMqttSNClient::puback(const uint16_t topic_id, const uint16_t message_id,
+                        const return_code_t return_code)
 {
   msg_puback *msg = reinterpret_cast<msg_puback *>(message_buffer);
 
@@ -675,7 +675,7 @@ MQTTSN::puback(const uint16_t topic_id, const uint16_t message_id,
 }
 
 void
-MQTTSN::subscribe_by_name(const uint8_t flags, const char *topic_name)
+FlyMqttSNClient::subscribe_by_name(const uint8_t flags, const char *topic_name)
 {
   ++_message_id;
 
@@ -699,7 +699,7 @@ MQTTSN::subscribe_by_name(const uint8_t flags, const char *topic_name)
 }
 
 void
-MQTTSN::subscribe_by_id(const uint8_t flags, const uint16_t topic_id)
+FlyMqttSNClient::subscribe_by_id(const uint8_t flags, const uint16_t topic_id)
 {
   ++_message_id;
 
@@ -721,7 +721,8 @@ MQTTSN::subscribe_by_id(const uint8_t flags, const uint16_t topic_id)
 }
 
 void
-MQTTSN::unsubscribe_by_name(const uint8_t flags, const char *topic_name)
+FlyMqttSNClient::unsubscribe_by_name(const uint8_t flags,
+                                     const char *topic_name)
 {
   ++_message_id;
 
@@ -745,7 +746,7 @@ MQTTSN::unsubscribe_by_name(const uint8_t flags, const char *topic_name)
 }
 
 void
-MQTTSN::unsubscribe_by_id(const uint8_t flags, const uint16_t topic_id)
+FlyMqttSNClient::unsubscribe_by_id(const uint8_t flags, const uint16_t topic_id)
 {
   ++_message_id;
 
@@ -767,7 +768,7 @@ MQTTSN::unsubscribe_by_id(const uint8_t flags, const uint16_t topic_id)
 }
 
 void
-MQTTSN::pingreq(const char *client_id)
+FlyMqttSNClient::pingreq(const char *client_id)
 {
   msg_pingreq *msg = reinterpret_cast<msg_pingreq *>(message_buffer);
 
@@ -782,7 +783,7 @@ MQTTSN::pingreq(const char *client_id)
 }
 
 void
-MQTTSN::pingresp()
+FlyMqttSNClient::pingresp()
 {
   message_header *msg = reinterpret_cast<message_header *>(message_buffer);
 
