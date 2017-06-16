@@ -28,18 +28,18 @@
 #include "FlyMqttSNClient.h"
 
 FlyMqttSNClient::FlyMqttSNClient(Stream *stream) :
-  waiting_for_response(true),
-  response_to_wait_for(ADVERTISE),
-  _message_id(0),
-  topic_count(0),
-  _gateway_id(0),
-  _response_timer(0),
-  _response_retries(0),
+  mWaitingForResponse(true),
+  mResponseToWaitFor(FMSNMT_ADVERTISE),
+  mMessageId(0),
+  mTopicCount(0),
+  mGatewayId(0),
+  mResponseTimer(0),
+  mResponseRetries(0),
   mStream(stream)
 {
-  memset(topic_table, 0, sizeof(topic) * MAX_TOPICS);
-  memset(message_buffer, 0, MAX_BUFFER_SIZE);
-  memset(response_buffer, 0, MAX_BUFFER_SIZE);
+  memset(mTopicTable, 0, sizeof(Topic) * FMSN_MAX_TOPICS);
+  memset(mMessageBuffer, 0, FMSN_MAX_BUFFER_SIZE);
+  memset(mResponseBuffer, 0, FMSN_MAX_BUFFER_SIZE);
 }
 
 FlyMqttSNClient::~FlyMqttSNClient()
@@ -47,30 +47,30 @@ FlyMqttSNClient::~FlyMqttSNClient()
 }
 
 bool
-FlyMqttSNClient::wait_for_response()
+FlyMqttSNClient::waitForResponse()
 {
-  if(waiting_for_response)
+  if(mWaitingForResponse)
   {
     // TODO: Watch out for overflow.
-    if((millis() - _response_timer) > (T_RETRY * 1000L))
+    if((millis() - mResponseTimer) > (FMSN_T_RETRY * 1000L))
     {
-      _response_timer = millis();
+      mResponseTimer = millis();
 
-      if(_response_retries == 0)
+      if(mResponseRetries == 0)
       {
-        waiting_for_response = false;
-        disconnect_handler(NULL);
+        mWaitingForResponse = false;
+        disconnectHandler(NULL);
       }
       else
       {
-        send_message();
+        sendMessage();
       }
 
-      --_response_retries;
+      --mResponseRetries;
     }
   }
 
-  return waiting_for_response;
+  return mWaitingForResponse;
 }
 
 uint16_t
@@ -80,14 +80,14 @@ FlyMqttSNClient::bswap(const uint16_t val)
 }
 
 uint16_t
-FlyMqttSNClient::find_topic_id(const char *name, uint8_t&index)
+FlyMqttSNClient::findTopicId(const char *name, uint8_t&index)
 {
-  for(uint8_t i = 0; i < topic_count; ++i)
+  for(uint8_t i = 0; i < mTopicCount; ++i)
   {
-    if(strcmp(topic_table[i].name, name) == 0)
+    if(strcmp(mTopicTable[i].name, name) == 0)
     {
       index = i;
-      return topic_table[i].id;
+      return mTopicTable[i].id;
     }
   }
 
@@ -95,21 +95,21 @@ FlyMqttSNClient::find_topic_id(const char *name, uint8_t&index)
 }
 
 void
-FlyMqttSNClient::parse_stream()
+FlyMqttSNClient::parseStream()
 {
   if(mStream->available() > 0)
   {
-    uint8_t *response      = response_buffer;
-    uint8_t  packet_length = (uint8_t)mStream->read();
+    uint8_t *response     = mResponseBuffer;
+    uint8_t  packetLength = (uint8_t)mStream->read();
 
-    *response++ = packet_length--;
+    *response++ = packetLength--;
 
-    while(packet_length > 0)
+    while(packetLength > 0)
     {
       while(mStream->available() > 0)
       {
         *response++ = (uint8_t)mStream->read();
-        --packet_length;
+        --packetLength;
       }
     }
 
@@ -120,16 +120,16 @@ FlyMqttSNClient::parse_stream()
 void
 FlyMqttSNClient::dispatch()
 {
-  message_header *response_message = (message_header *)response_buffer;
-  bool handled = true;
+  FMSNMsgHeader *responseMessage = (FMSNMsgHeader *)mResponseBuffer;
+  bool           handled         = true;
 
-  switch(response_message->type)
+  switch(responseMessage->type)
   {
-  case ADVERTISE:
+  case FMSNMT_ADVERTISE:
 
-    if(waiting_for_response && response_to_wait_for == ADVERTISE)
+    if(mWaitingForResponse && mResponseToWaitFor == FMSNMT_ADVERTISE)
     {
-      advertise_handler((msg_advertise *)response_buffer);
+      advertiseHandler((FMSNMsgAdvertise *)mResponseBuffer);
     }
     else
     {
@@ -138,15 +138,15 @@ FlyMqttSNClient::dispatch()
 
     break;
 
-  case GWINFO:
-    gwinfo_handler((msg_gwinfo *)response_buffer);
+  case FMSNMT_GWINFO:
+    gwinfoHandler((FMSNMsgGwinfo *)mResponseBuffer);
     break;
 
-  case CONNACK:
+  case FMSNMT_CONNACK:
 
-    if(waiting_for_response && response_to_wait_for == CONNACK)
+    if(mWaitingForResponse && mResponseToWaitFor == FMSNMT_CONNACK)
     {
-      connack_handler((msg_connack *)response_buffer);
+      connackHandler((FMSNMsgConnack *)mResponseBuffer);
     }
     else
     {
@@ -155,23 +155,23 @@ FlyMqttSNClient::dispatch()
 
     break;
 
-  case WILLTOPICREQ:
-    willtopicreq_handler(response_message);
+  case FMSNMT_WILLTOPICREQ:
+    willtopicreqHandler(responseMessage);
     break;
 
-  case WILLMSGREQ:
-    willmsgreq_handler(response_message);
+  case FMSNMT_WILLMSGREQ:
+    willmsgreqHandler(responseMessage);
     break;
 
-  case REGISTER:
-    register_handler((msg_register *)response_buffer);
+  case FMSNMT_REGISTER:
+    registerHandler((FMSNMsgRegister *)mResponseBuffer);
     break;
 
-  case REGACK:
+  case FMSNMT_REGACK:
 
-    if(waiting_for_response && response_to_wait_for == REGACK)
+    if(mWaitingForResponse && mResponseToWaitFor == FMSNMT_REGACK)
     {
-      regack_handler((msg_regack *)response_buffer);
+      regackHandler((FMSNMsgRegack *)mResponseBuffer);
     }
     else
     {
@@ -180,15 +180,15 @@ FlyMqttSNClient::dispatch()
 
     break;
 
-  case PUBLISH:
-    publish_handler((msg_publish *)response_buffer);
+  case FMSNMT_PUBLISH:
+    publishHandler((FMSNMsgPublish *)mResponseBuffer);
     break;
 
-  case PUBACK:
+  case FMSNMT_PUBACK:
 
-    if(waiting_for_response && response_to_wait_for == PUBACK)
+    if(mWaitingForResponse && mResponseToWaitFor == FMSNMT_PUBACK)
     {
-      puback_handler((msg_puback *)response_buffer);
+      pubackHandler((FMSNMsgPuback *)mResponseBuffer);
     }
     else
     {
@@ -197,11 +197,11 @@ FlyMqttSNClient::dispatch()
 
     break;
 
-  case SUBACK:
+  case FMSNMT_SUBACK:
 
-    if(waiting_for_response && response_to_wait_for == SUBACK)
+    if(mWaitingForResponse && mResponseToWaitFor == FMSNMT_SUBACK)
     {
-      suback_handler((msg_suback *)response_buffer);
+      subackHandler((FMSNMsgSuback *)mResponseBuffer);
     }
     else
     {
@@ -210,11 +210,11 @@ FlyMqttSNClient::dispatch()
 
     break;
 
-  case UNSUBACK:
+  case FMSNMT_UNSUBACK:
 
-    if(waiting_for_response && response_to_wait_for == UNSUBACK)
+    if(mWaitingForResponse && mResponseToWaitFor == FMSNMT_UNSUBACK)
     {
-      unsuback_handler((msg_unsuback *)response_buffer);
+      unsubackHandler((FMSNMsgUnsuback *)mResponseBuffer);
     }
     else
     {
@@ -223,15 +223,15 @@ FlyMqttSNClient::dispatch()
 
     break;
 
-  case PINGREQ:
-    pingreq_handler((msg_pingreq *)response_buffer);
+  case FMSNMT_PINGREQ:
+    pingreqHandler((FMSNMsgPingreq *)mResponseBuffer);
     break;
 
-  case PINGRESP:
+  case FMSNMT_PINGRESP:
 
-    if(waiting_for_response && response_to_wait_for == PINGRESP)
+    if(mWaitingForResponse && mResponseToWaitFor == FMSNMT_PINGRESP)
     {
-      pingresp_handler();
+      pingrespHandler();
     }
     else
     {
@@ -240,15 +240,15 @@ FlyMqttSNClient::dispatch()
 
     break;
 
-  case DISCONNECT:
-    disconnect_handler((msg_disconnect *)response_buffer);
+  case FMSNMT_DISCONNECT:
+    disconnectHandler((FMSNMsgDisconnect *)mResponseBuffer);
     break;
 
-  case WILLTOPICRESP:
+  case FMSNMT_WILLTOPICRESP:
 
-    if(waiting_for_response && response_to_wait_for == WILLTOPICRESP)
+    if(mWaitingForResponse && mResponseToWaitFor == FMSNMT_WILLTOPICRESP)
     {
-      willtopicresp_handler((msg_willtopicresp *)response_buffer);
+      willtopicrespHandler((FMSNMsgWilltopicresp *)mResponseBuffer);
     }
     else
     {
@@ -257,11 +257,11 @@ FlyMqttSNClient::dispatch()
 
     break;
 
-  case WILLMSGRESP:
+  case FMSNMT_WILLMSGRESP:
 
-    if(waiting_for_response && response_to_wait_for == WILLMSGRESP)
+    if(mWaitingForResponse && mResponseToWaitFor == FMSNMT_WILLMSGRESP)
     {
-      willmsgresp_handler((msg_willmsgresp *)response_buffer);
+      willmsgrespHandler((FMSNMsgWillmsgresp *)mResponseBuffer);
     }
     else
     {
@@ -276,22 +276,22 @@ FlyMqttSNClient::dispatch()
 
   if(handled)
   {
-    waiting_for_response = false;
+    mWaitingForResponse = false;
   }
 }
 
 void
-FlyMqttSNClient::send_message()
+FlyMqttSNClient::sendMessage()
 {
-  message_header *hdr = reinterpret_cast<message_header *>(message_buffer);
+  FMSNMsgHeader *hdr = reinterpret_cast<FMSNMsgHeader *>(mMessageBuffer);
 
-  mStream->write(message_buffer, hdr->length);
+  mStream->write(mMessageBuffer, hdr->length);
   mStream->flush();
 
-  if(!waiting_for_response)
+  if(!mWaitingForResponse)
   {
-    _response_timer   = millis();
-    _response_retries = N_RETRY;
+    mResponseTimer   = millis();
+    mResponseRetries = FMSN_N_RETRY;
 
     // Cheesy hack to ensure two messages don't run-on into one send.
 //        delay(10);
@@ -301,48 +301,48 @@ FlyMqttSNClient::send_message()
 void
 FlyMqttSNClient::timeout()
 {
-  waiting_for_response = true;
-  response_to_wait_for = ADVERTISE;
+  mWaitingForResponse = true;
+  mResponseToWaitFor  = FMSNMT_ADVERTISE;
 }
 
 void
-FlyMqttSNClient::advertise_handler(const msg_advertise *msg)
+FlyMqttSNClient::advertiseHandler(const FMSNMsgAdvertise *msg)
 {
-  _gateway_id = msg->gw_id;
+  mGatewayId = msg->gwId;
 }
 
 void
-FlyMqttSNClient::gwinfo_handler(const msg_gwinfo *msg)
-{
-}
-
-void
-FlyMqttSNClient::connack_handler(const msg_connack *msg)
+FlyMqttSNClient::gwinfoHandler(const FMSNMsgGwinfo *msg)
 {
 }
 
 void
-FlyMqttSNClient::willtopicreq_handler(const message_header *msg)
+FlyMqttSNClient::connackHandler(const FMSNMsgConnack *msg)
 {
 }
 
 void
-FlyMqttSNClient::willmsgreq_handler(const message_header *msg)
+FlyMqttSNClient::willtopicreqHandler(const FMSNMsgHeader *msg)
 {
 }
 
 void
-FlyMqttSNClient::regack_handler(const msg_regack *msg)
+FlyMqttSNClient::willmsgreqHandler(const FMSNMsgHeader *msg)
 {
-  if(msg->return_code == 0 && topic_count < MAX_TOPICS &&
-     bswap(msg->message_id) == _message_id)
+}
+
+void
+FlyMqttSNClient::regackHandler(const FMSNMsgRegack *msg)
+{
+  if(msg->returnCode == 0 && mTopicCount < FMSN_MAX_TOPICS &&
+     bswap(msg->messageId) == mMessageId)
   {
-    const uint16_t topic_id    = bswap(msg->topic_id);
+    const uint16_t topicId     = bswap(msg->topicId);
     bool           found_topic = false;
 
-    for(uint8_t i = 0; i < topic_count; ++i)
+    for(uint8_t i = 0; i < mTopicCount; ++i)
     {
-      if(topic_table[i].id == topic_id)
+      if(mTopicTable[i].id == topicId)
       {
         found_topic = true;
         break;
@@ -351,225 +351,227 @@ FlyMqttSNClient::regack_handler(const msg_regack *msg)
 
     if(!found_topic)
     {
-      topic_table[topic_count].id = topic_id;
-      ++topic_count;
+      mTopicTable[mTopicCount].id = topicId;
+      ++mTopicCount;
     }
   }
 }
 
 void
-FlyMqttSNClient::puback_handler(const msg_puback *msg)
+FlyMqttSNClient::pubackHandler(const FMSNMsgPuback *msg)
 {
 }
 
 #ifdef USE_QOS2
 void
-MQTTSN::pubrec_handler(const msg_pubqos2 *msg)
+MQTTSN::pubrecHandler(const msg_pubqos2 *msg)
 {
 }
 
 void
-MQTTSN::pubrel_handler(const msg_pubqos2 *msg)
+MQTTSN::pubrelHandler(const msg_pubqos2 *msg)
 {
 }
 
 void
-MQTTSN::pubcomp_handler(const msg_pubqos2 *msg)
+MQTTSN::pubcompHandler(const msg_pubqos2 *msg)
 {
 }
 
 #endif
 
 void
-FlyMqttSNClient::pingreq_handler(const msg_pingreq *msg)
+FlyMqttSNClient::pingreqHandler(const FMSNMsgPingreq *msg)
 {
   pingresp();
 }
 
 void
-FlyMqttSNClient::suback_handler(const msg_suback *msg)
+FlyMqttSNClient::subackHandler(const FMSNMsgSuback *msg)
 {
 }
 
 void
-FlyMqttSNClient::unsuback_handler(const msg_unsuback *msg)
+FlyMqttSNClient::unsubackHandler(const FMSNMsgUnsuback *msg)
 {
 }
 
 void
-FlyMqttSNClient::disconnect_handler(const msg_disconnect *msg)
+FlyMqttSNClient::disconnectHandler(const FMSNMsgDisconnect *msg)
 {
 }
 
 void
-FlyMqttSNClient::pingresp_handler()
+FlyMqttSNClient::pingrespHandler()
 {
 }
 
 void
-FlyMqttSNClient::publish_handler(const msg_publish *msg)
+FlyMqttSNClient::publishHandler(const FMSNMsgPublish *msg)
 {
-  if(msg->flags & FLAG_QOS_1)
+  if(msg->flags & FMSN_FLAG_QOS_1)
   {
-    return_code_t  ret      = REJECTED_INVALID_TOPIC_ID;
-    const uint16_t topic_id = bswap(msg->topic_id);
+    FMSNReturnCode ret     = FMSNRC_REJECTED_INVALID_TOPIC_ID;
+    const uint16_t topicId = bswap(msg->topicId);
 
-    for(uint8_t i = 0; i < topic_count; ++i)
+    for(uint8_t i = 0; i < mTopicCount; ++i)
     {
-      if(topic_table[i].id == topic_id)
+      if(mTopicTable[i].id == topicId)
       {
-        ret = ACCEPTED;
+        ret = FMSNRC_ACCEPTED;
         break;
       }
     }
 
-    puback(msg->topic_id, msg->message_id, ret);
+    puback(msg->topicId, msg->messageId, ret);
   }
 }
 
 void
-FlyMqttSNClient::register_handler(const msg_register *msg)
+FlyMqttSNClient::registerHandler(const FMSNMsgRegister *msg)
 {
-  return_code_t ret = REJECTED_INVALID_TOPIC_ID;
-  uint8_t       index;
+  FMSNReturnCode ret = FMSNRC_REJECTED_INVALID_TOPIC_ID;
+  uint8_t        index;
 
-  find_topic_id(msg->topic_name, index);
+  findTopicId(msg->topicName, index);
 
   if(index != 0xffff)
   {
-    topic_table[index].id = bswap(msg->topic_id);
-    ret = ACCEPTED;
+    mTopicTable[index].id = bswap(msg->topicId);
+    ret = FMSNRC_ACCEPTED;
   }
 
-  regack(msg->topic_id, msg->message_id, ret);
+  regack(msg->topicId, msg->messageId, ret);
 }
 
 void
-FlyMqttSNClient::willtopicresp_handler(const msg_willtopicresp *msg)
+FlyMqttSNClient::willtopicrespHandler(const FMSNMsgWilltopicresp *msg)
 {
 }
 
 void
-FlyMqttSNClient::willmsgresp_handler(const msg_willmsgresp *msg)
+FlyMqttSNClient::willmsgrespHandler(const FMSNMsgWillmsgresp *msg)
 {
 }
 
 void
 FlyMqttSNClient::searchgw(const uint8_t radius)
 {
-  msg_searchgw *msg = reinterpret_cast<msg_searchgw *>(message_buffer);
+  FMSNMsgSearchgw *msg = reinterpret_cast<FMSNMsgSearchgw *>(mMessageBuffer);
 
-  msg->length = sizeof(msg_searchgw);
-  msg->type   = SEARCHGW;
+  msg->length = sizeof(FMSNMsgSearchgw);
+  msg->type   = FMSNMT_SEARCHGW;
   msg->radius = radius;
 
-  send_message();
-  waiting_for_response = true;
-  response_to_wait_for = GWINFO;
+  sendMessage();
+  mWaitingForResponse = true;
+  mResponseToWaitFor  = FMSNMT_GWINFO;
 }
 
 void
 FlyMqttSNClient::connect(const uint8_t flags, const uint16_t duration,
-                         const char *client_id)
+                         const char *clientId)
 {
-  msg_connect *msg = reinterpret_cast<msg_connect *>(message_buffer);
+  FMSNMsgConnect *msg = reinterpret_cast<FMSNMsgConnect *>(mMessageBuffer);
 
-  msg->length      = sizeof(msg_connect) + strlen(client_id);
-  msg->type        = CONNECT;
-  msg->flags       = flags;
-  msg->protocol_id = PROTOCOL_ID;
-  msg->duration    = bswap(duration);
-  strcpy(msg->client_id, client_id);
+  msg->length     = sizeof(FMSNMsgConnect) + strlen(clientId);
+  msg->type       = FMSNMT_CONNECT;
+  msg->flags      = flags;
+  msg->protocolId = FMSN_PROTOCOL_ID;
+  msg->duration   = bswap(duration);
+  strcpy(msg->clientId, clientId);
 
-  send_message();
-  waiting_for_response = true;
-  response_to_wait_for = CONNACK;
+  sendMessage();
+  mWaitingForResponse = true;
+  mResponseToWaitFor  = FMSNMT_CONNACK;
 }
 
 void
-FlyMqttSNClient::willtopic(const uint8_t flags, const char *will_topic,
+FlyMqttSNClient::willtopic(const uint8_t flags, const char *willTopic,
                            const bool update)
 {
-  if(will_topic == NULL)
+  if(willTopic == NULL)
   {
-    message_header *msg = reinterpret_cast<message_header *>(message_buffer);
+    FMSNMsgHeader *msg = reinterpret_cast<FMSNMsgHeader *>(mMessageBuffer);
 
-    msg->type   = update ? WILLTOPICUPD : WILLTOPIC;
-    msg->length = sizeof(message_header);
+    msg->type   = update ? FMSNMT_WILLTOPICUPD : FMSNMT_WILLTOPIC;
+    msg->length = sizeof(FMSNMsgHeader);
   }
   else
   {
-    msg_willtopic *msg = reinterpret_cast<msg_willtopic *>(message_buffer);
+    FMSNMsgWilltopic *msg =
+      reinterpret_cast<FMSNMsgWilltopic *>(mMessageBuffer);
 
-    msg->type  = update ? WILLTOPICUPD : WILLTOPIC;
+    msg->type  = update ? FMSNMT_WILLTOPICUPD : FMSNMT_WILLTOPIC;
     msg->flags = flags;
-    strcpy(msg->will_topic, will_topic);
+    strcpy(msg->will_topic, willTopic);
   }
 
-  send_message();
+  sendMessage();
 
-//    if ((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2) {
+//    if ((flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_1 || (flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_2) {
 //        waiting_for_response = true;
 //        response_to_wait_for = WILLMSGREQ;
 //    }
 }
 
 void
-FlyMqttSNClient::willmsg(const void *will_msg, const uint8_t will_msg_len,
+FlyMqttSNClient::willmsg(const void *willMsg, const uint8_t willMsgLen,
                          const bool update)
 {
-  msg_willmsg *msg = reinterpret_cast<msg_willmsg *>(message_buffer);
+  FMSNMsgWillmsg *msg = reinterpret_cast<FMSNMsgWillmsg *>(mMessageBuffer);
 
-  msg->length = sizeof(msg_willmsg) + will_msg_len;
-  msg->type   = update ? WILLMSGUPD : WILLMSG;
-  memcpy(msg->willmsg, will_msg, will_msg_len);
+  msg->length = sizeof(FMSNMsgWillmsg) + willMsgLen;
+  msg->type   = update ? FMSNMT_WILLMSGUPD : FMSNMT_WILLMSG;
+  memcpy(msg->willmsg, willMsg, willMsgLen);
 
-  send_message();
+  sendMessage();
 }
 
 void
 FlyMqttSNClient::disconnect(const uint16_t duration)
 {
-  msg_disconnect *msg = reinterpret_cast<msg_disconnect *>(message_buffer);
+  FMSNMsgDisconnect *msg =
+    reinterpret_cast<FMSNMsgDisconnect *>(mMessageBuffer);
 
-  msg->length = sizeof(message_header);
-  msg->type   = DISCONNECT;
+  msg->length = sizeof(FMSNMsgHeader);
+  msg->type   = FMSNMT_DISCONNECT;
 
   if(duration > 0)
   {
-    msg->length  += sizeof(msg_disconnect);
+    msg->length  += sizeof(FMSNMsgDisconnect);
     msg->duration = bswap(duration);
   }
 
-  send_message();
-  waiting_for_response = true;
-  response_to_wait_for = DISCONNECT;
+  sendMessage();
+  mWaitingForResponse = true;
+  mResponseToWaitFor  = FMSNMT_DISCONNECT;
 }
 
 bool
-FlyMqttSNClient::register_topic(const char *name)
+FlyMqttSNClient::registerTopic(const char *name)
 {
-  if(!waiting_for_response && topic_count < (MAX_TOPICS - 1))
+  if(!mWaitingForResponse && mTopicCount < (FMSN_MAX_TOPICS - 1))
   {
-    ++_message_id;
+    ++mMessageId;
 
     // Fill in the next table entry, but we only increment the counter to
     // the next topic when we get a REGACK from the broker. So don't issue
     // another REGISTER until we have resolved this one.
-    topic_table[topic_count].name = name;
-    topic_table[topic_count].id   = 0;
+    mTopicTable[mTopicCount].name = name;
+    mTopicTable[mTopicCount].id   = 0;
 
-    msg_register *msg = reinterpret_cast<msg_register *>(message_buffer);
+    FMSNMsgRegister *msg = reinterpret_cast<FMSNMsgRegister *>(mMessageBuffer);
 
-    msg->length     = sizeof(msg_register) + strlen(name);
-    msg->type       = REGISTER;
-    msg->topic_id   = 0;
-    msg->message_id = bswap(_message_id);
-    strcpy(msg->topic_name, name);
+    msg->length    = sizeof(FMSNMsgRegister) + strlen(name);
+    msg->type      = FMSNMT_REGISTER;
+    msg->topicId   = 0;
+    msg->messageId = bswap(mMessageId);
+    strcpy(msg->topicName, name);
 
-    send_message();
-    waiting_for_response = true;
-    response_to_wait_for = REGACK;
+    sendMessage();
+    mWaitingForResponse = true;
+    mResponseToWaitFor  = FMSNMT_REGACK;
     return true;
   }
 
@@ -577,41 +579,42 @@ FlyMqttSNClient::register_topic(const char *name)
 }
 
 void
-FlyMqttSNClient::regack(const uint16_t topic_id, const uint16_t message_id,
-                        const return_code_t return_code)
+FlyMqttSNClient::regack(const uint16_t topicId, const uint16_t messageId,
+                        const FMSNReturnCode returnCode)
 {
-  msg_regack *msg = reinterpret_cast<msg_regack *>(message_buffer);
+  FMSNMsgRegack *msg = reinterpret_cast<FMSNMsgRegack *>(mMessageBuffer);
 
-  msg->length      = sizeof(msg_regack);
-  msg->type        = REGACK;
-  msg->topic_id    = bswap(topic_id);
-  msg->message_id  = bswap(message_id);
-  msg->return_code = return_code;
+  msg->length     = sizeof(FMSNMsgRegack);
+  msg->type       = FMSNMT_REGACK;
+  msg->topicId    = bswap(topicId);
+  msg->messageId  = bswap(messageId);
+  msg->returnCode = returnCode;
 
-  send_message();
+  sendMessage();
 }
 
 void
-FlyMqttSNClient::publish(const uint8_t flags, const uint16_t topic_id,
-                         const void *data, const uint8_t data_len)
+FlyMqttSNClient::publish(const uint8_t flags, const uint16_t topicId,
+                         const void *data, const uint8_t dataLen)
 {
-  ++_message_id;
+  ++mMessageId;
 
-  msg_publish *msg = reinterpret_cast<msg_publish *>(message_buffer);
+  FMSNMsgPublish *msg = reinterpret_cast<FMSNMsgPublish *>(mMessageBuffer);
 
-  msg->length     = sizeof(msg_publish) + data_len;
-  msg->type       = PUBLISH;
-  msg->flags      = flags;
-  msg->topic_id   = bswap(topic_id);
-  msg->message_id = bswap(_message_id);
-  memcpy(msg->data, data, data_len);
+  msg->length    = sizeof(FMSNMsgPublish) + dataLen;
+  msg->type      = FMSNMT_PUBLISH;
+  msg->flags     = flags;
+  msg->topicId   = bswap(topicId);
+  msg->messageId = bswap(mMessageId);
+  memcpy(msg->data, data, dataLen);
 
-  send_message();
+  sendMessage();
 
-  if((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2)
+  if((flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_1 ||
+     (flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_2)
   {
-    waiting_for_response = true;
-    response_to_wait_for = PUBACK;
+    mWaitingForResponse = true;
+    mResponseToWaitFor  = FMSNMT_PUBACK;
   }
 }
 
@@ -621,9 +624,9 @@ MQTTSN::pubrec()
 {
   msg_pubqos2 *msg = reinterpret_cast<msg_pubqos2 *>(message_buffer);
 
-  msg->length     = sizeof(msg_pubqos2);
-  msg->type       = PUBREC;
-  msg->message_id = bswap(_message_id);
+  msg->length    = sizeof(msg_pubqos2);
+  msg->type      = PUBREC;
+  msg->messageId = bswap(_message_id);
 
   send_message();
 }
@@ -633,9 +636,9 @@ MQTTSN::pubrel()
 {
   msg_pubqos2 *msg = reinterpret_cast<msg_pubqos2 *>(message_buffer);
 
-  msg->length     = sizeof(msg_pubqos2);
-  msg->type       = PUBREL;
-  msg->message_id = bswap(_message_id);
+  msg->length    = sizeof(msg_pubqos2);
+  msg->type      = PUBREL;
+  msg->messageId = bswap(_message_id);
 
   send_message();
 }
@@ -645,9 +648,9 @@ MQTTSN::pubcomp()
 {
   msg_pubqos2 *msg = reinterpret_cast<msg_pubqos2 *>(message_buffer);
 
-  msg->length     = sizeof(msg_pubqos2);
-  msg->type       = PUBCOMP;
-  msg->message_id = bswap(_message_id);
+  msg->length    = sizeof(msg_pubqos2);
+  msg->type      = PUBCOMP;
+  msg->messageId = bswap(_message_id);
 
   send_message();
 }
@@ -655,135 +658,140 @@ MQTTSN::pubcomp()
 #endif
 
 void
-FlyMqttSNClient::puback(const uint16_t topic_id, const uint16_t message_id,
-                        const return_code_t return_code)
+FlyMqttSNClient::puback(const uint16_t topicId, const uint16_t messageId,
+                        const FMSNReturnCode returnCode)
 {
-  msg_puback *msg = reinterpret_cast<msg_puback *>(message_buffer);
+  FMSNMsgPuback *msg = reinterpret_cast<FMSNMsgPuback *>(mMessageBuffer);
 
-  msg->length      = sizeof(msg_puback);
-  msg->type        = PUBACK;
-  msg->topic_id    = bswap(topic_id);
-  msg->message_id  = bswap(message_id);
-  msg->return_code = return_code;
+  msg->length     = sizeof(FMSNMsgPuback);
+  msg->type       = FMSNMT_PUBACK;
+  msg->topicId    = bswap(topicId);
+  msg->messageId  = bswap(messageId);
+  msg->returnCode = returnCode;
 
-  send_message();
+  sendMessage();
 }
 
 void
-FlyMqttSNClient::subscribe_by_name(const uint8_t flags, const char *topic_name)
+FlyMqttSNClient::subscribeByName(const uint8_t flags, const char *topicName)
 {
-  ++_message_id;
+  ++mMessageId;
 
-  msg_subscribe *msg = reinterpret_cast<msg_subscribe *>(message_buffer);
+  FMSNMsgSubscribe *msg = reinterpret_cast<FMSNMsgSubscribe *>(mMessageBuffer);
 
-  // The -2 here is because we're unioning a 0-length member (topic_name)
+  // The -2 here is because we're unioning a 0-length member (topicName)
   // with a uint16_t in the msg_subscribe struct.
-  msg->length     = sizeof(msg_subscribe) + strlen(topic_name) - 2;
-  msg->type       = SUBSCRIBE;
-  msg->flags      = (flags & QOS_MASK) | FLAG_TOPIC_NAME;
-  msg->message_id = bswap(_message_id);
-  strcpy(msg->topic_name, topic_name);
+  msg->length    = sizeof(FMSNMsgSubscribe) + strlen(topicName) - 2;
+  msg->type      = FMSNMT_SUBSCRIBE;
+  msg->flags     = (flags & FMSN_QOS_MASK) | FMSN_FLAG_TOPIC_NAME;
+  msg->messageId = bswap(mMessageId);
+  strcpy(msg->topicName, topicName);
 
-  send_message();
+  sendMessage();
 
-  if((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2)
+  if((flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_1 ||
+     (flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_2)
   {
-    waiting_for_response = true;
-    response_to_wait_for = SUBACK;
+    mWaitingForResponse = true;
+    mResponseToWaitFor  = FMSNMT_SUBACK;
   }
 }
 
 void
-FlyMqttSNClient::subscribe_by_id(const uint8_t flags, const uint16_t topic_id)
+FlyMqttSNClient::subscribeById(const uint8_t flags, const uint16_t topicId)
 {
-  ++_message_id;
+  ++mMessageId;
 
-  msg_subscribe *msg = reinterpret_cast<msg_subscribe *>(message_buffer);
+  FMSNMsgSubscribe *msg = reinterpret_cast<FMSNMsgSubscribe *>(mMessageBuffer);
 
-  msg->length     = sizeof(msg_subscribe);
-  msg->type       = SUBSCRIBE;
-  msg->flags      = (flags & QOS_MASK) | FLAG_TOPIC_PREDEFINED_ID;
-  msg->message_id = bswap(_message_id);
-  msg->topic_id   = bswap(topic_id);
+  msg->length    = sizeof(FMSNMsgSubscribe);
+  msg->type      = FMSNMT_SUBSCRIBE;
+  msg->flags     = (flags & FMSN_QOS_MASK) | FMSN_FLAG_TOPIC_PREDEFINED_ID;
+  msg->messageId = bswap(mMessageId);
+  msg->topicId   = bswap(topicId);
 
-  send_message();
+  sendMessage();
 
-  if((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2)
+  if((flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_1 ||
+     (flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_2)
   {
-    waiting_for_response = true;
-    response_to_wait_for = SUBACK;
+    mWaitingForResponse = true;
+    mResponseToWaitFor  = FMSNMT_SUBACK;
   }
 }
 
 void
-FlyMqttSNClient::unsubscribe_by_name(const uint8_t flags,
-                                     const char *topic_name)
+FlyMqttSNClient::unsubscribeByName(const uint8_t flags, const char *topicName)
 {
-  ++_message_id;
+  ++mMessageId;
 
-  msg_unsubscribe *msg = reinterpret_cast<msg_unsubscribe *>(message_buffer);
+  FMSNMsgUnsubscribe *msg =
+    reinterpret_cast<FMSNMsgUnsubscribe *>(mMessageBuffer);
 
-  // The -2 here is because we're unioning a 0-length member (topic_name)
+  // The -2 here is because we're unioning a 0-length member (topicName)
   // with a uint16_t in the msg_unsubscribe struct.
-  msg->length     = sizeof(msg_unsubscribe) + strlen(topic_name) - 2;
-  msg->type       = UNSUBSCRIBE;
-  msg->flags      = (flags & QOS_MASK) | FLAG_TOPIC_NAME;
-  msg->message_id = bswap(_message_id);
-  strcpy(msg->topic_name, topic_name);
+  msg->length    = sizeof(FMSNMsgUnsubscribe) + strlen(topicName) - 2;
+  msg->type      = FMSNMT_UNSUBSCRIBE;
+  msg->flags     = (flags & FMSN_QOS_MASK) | FMSN_FLAG_TOPIC_NAME;
+  msg->messageId = bswap(mMessageId);
+  strcpy(msg->topicName, topicName);
 
-  send_message();
+  sendMessage();
 
-  if((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2)
+  if((flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_1 ||
+     (flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_2)
   {
-    waiting_for_response = true;
-    response_to_wait_for = UNSUBACK;
+    mWaitingForResponse = true;
+    mResponseToWaitFor  = FMSNMT_UNSUBACK;
   }
 }
 
 void
-FlyMqttSNClient::unsubscribe_by_id(const uint8_t flags, const uint16_t topic_id)
+FlyMqttSNClient::unsubscribeById(const uint8_t flags, const uint16_t topicId)
 {
-  ++_message_id;
+  ++mMessageId;
 
-  msg_unsubscribe *msg = reinterpret_cast<msg_unsubscribe *>(message_buffer);
+  FMSNMsgUnsubscribe *msg =
+    reinterpret_cast<FMSNMsgUnsubscribe *>(mMessageBuffer);
 
-  msg->length     = sizeof(msg_unsubscribe);
-  msg->type       = UNSUBSCRIBE;
-  msg->flags      = (flags & QOS_MASK) | FLAG_TOPIC_PREDEFINED_ID;
-  msg->message_id = bswap(_message_id);
-  msg->topic_id   = bswap(topic_id);
+  msg->length    = sizeof(FMSNMsgUnsubscribe);
+  msg->type      = FMSNMT_UNSUBSCRIBE;
+  msg->flags     = (flags & FMSN_QOS_MASK) | FMSN_FLAG_TOPIC_PREDEFINED_ID;
+  msg->messageId = bswap(mMessageId);
+  msg->topicId   = bswap(topicId);
 
-  send_message();
+  sendMessage();
 
-  if((flags & QOS_MASK) == FLAG_QOS_1 || (flags & QOS_MASK) == FLAG_QOS_2)
+  if((flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_1 ||
+     (flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_2)
   {
-    waiting_for_response = true;
-    response_to_wait_for = UNSUBACK;
+    mWaitingForResponse = true;
+    mResponseToWaitFor  = FMSNMT_UNSUBACK;
   }
 }
 
 void
-FlyMqttSNClient::pingreq(const char *client_id)
+FlyMqttSNClient::pingreq(const char *clientId)
 {
-  msg_pingreq *msg = reinterpret_cast<msg_pingreq *>(message_buffer);
+  FMSNMsgPingreq *msg = reinterpret_cast<FMSNMsgPingreq *>(mMessageBuffer);
 
-  msg->length = sizeof(msg_pingreq) + strlen(client_id);
-  msg->type   = PINGREQ;
-  strcpy(msg->client_id, client_id);
+  msg->length = sizeof(FMSNMsgPingreq) + strlen(clientId);
+  msg->type   = FMSNMT_PINGREQ;
+  strcpy(msg->clientId, clientId);
 
-  send_message();
+  sendMessage();
 
-  waiting_for_response = true;
-  response_to_wait_for = PINGRESP;
+  mWaitingForResponse = true;
+  mResponseToWaitFor  = FMSNMT_PINGRESP;
 }
 
 void
 FlyMqttSNClient::pingresp()
 {
-  message_header *msg = reinterpret_cast<message_header *>(message_buffer);
+  FMSNMsgHeader *msg = reinterpret_cast<FMSNMsgHeader *>(mMessageBuffer);
 
-  msg->length = sizeof(message_header);
-  msg->type   = PINGRESP;
+  msg->length = sizeof(FMSNMsgHeader);
+  msg->type   = FMSNMT_PINGRESP;
 
-  send_message();
+  sendMessage();
 }

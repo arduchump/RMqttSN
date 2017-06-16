@@ -28,241 +28,242 @@
 
 #include <Arduino.h>
 
-#define PROTOCOL_ID 0x01
+#define FMSN_PROTOCOL_ID 0x01
 
-#define FLAG_DUP                 0x80
-#define FLAG_QOS_0               0x00
-#define FLAG_QOS_1               0x20
-#define FLAG_QOS_2               0x40
-#define FLAG_QOS_M1              0x60
-#define FLAG_RETAIN              0x10
-#define FLAG_WILL                0x08
-#define FLAG_CLEAN               0x04
-#define FLAG_TOPIC_NAME          0x00
-#define FLAG_TOPIC_PREDEFINED_ID 0x01
-#define FLAG_TOPIC_SHORT_NAME    0x02
+#define FMSN_FLAG_DUP                 0x80
+#define FMSN_FLAG_QOS_0               0x00
+#define FMSN_FLAG_QOS_1               0x20
+#define FMSN_FLAG_QOS_2               0x40
+#define FMSN_FLAG_QOS_M1              0x60
+#define FMSN_FLAG_RETAIN              0x10
+#define FMSN_FLAG_WILL                0x08
+#define FMSN_FLAG_CLEAN               0x04
+#define FMSN_FLAG_TOPIC_NAME          0x00
+#define FMSN_FLAG_TOPIC_PREDEFINED_ID 0x01
+#define FMSN_FLAG_TOPIC_SHORT_NAME    0x02
 
-#define QOS_MASK   (FLAG_QOS_0 | FLAG_QOS_1 | FLAG_QOS_2 | FLAG_QOS_M1)
-#define TOPIC_MASK (FLAG_TOPIC_NAME | FLAG_TOPIC_PREDEFINED_ID | \
-                    FLAG_TOPIC_SHORT_NAME)
+#define FMSN_QOS_MASK   (FMSN_FLAG_QOS_0 | FMSN_FLAG_QOS_1 | FMSN_FLAG_QOS_2 | \
+                         FMSN_FLAG_QOS_M1)
+#define FMSN_TOPIC_MASK (FMSN_FLAG_TOPIC_NAME | FMSN_FLAG_TOPIC_PREDEFINED_ID | \
+                         FMSN_FLAG_TOPIC_SHORT_NAME)
 
 // Recommended values for timers and counters. All timers are in seconds.
-#define T_ADV       960
-#define N_ADV       3
-#define T_SEARCH_GW 5
-#define T_GW_INFO   5
-#define T_WAIT      360
-#define T_RETRY     15
-#define N_RETRY     5
+#define FMSN_T_ADV       960
+#define FMSN_N_ADV       3
+#define FMSN_T_SEARCH_GW 5
+#define FMSN_T_GW_INFO   5
+#define FMSN_T_WAIT      360
+#define FMSN_T_RETRY     15
+#define FMSN_N_RETRY     5
 
-enum return_code_t
+enum FMSNReturnCode
 {
-  ACCEPTED,
-  REJECTED_CONGESTION,
-  REJECTED_INVALID_TOPIC_ID,
-  REJECTED_NOT_SUPPORTED
+  FMSNRC_ACCEPTED,
+  FMSNRC_REJECTED_CONGESTION,
+  FMSNRC_REJECTED_INVALID_TOPIC_ID,
+  FMSNRC_REJECTED_NOT_SUPPORTED
 };
 
-enum __attribute__ ((__packed__)) message_type
+enum __attribute__ ((__packed__)) FMSNMsgType
 {
-  ADVERTISE,
-  SEARCHGW,
-  GWINFO,
-  CONNECT = 0x04,
-  CONNACK,
-  WILLTOPICREQ,
-  WILLTOPIC,
-  WILLMSGREQ,
-  WILLMSG,
-  REGISTER,
-  REGACK,
-  PUBLISH,
-  PUBACK,
-  PUBCOMP,
-  PUBREC,
-  PUBREL,
-  SUBSCRIBE = 0x12,
-  SUBACK,
-  UNSUBSCRIBE,
-  UNSUBACK,
-  PINGREQ,
-  PINGRESP,
-  DISCONNECT,
-  WILLTOPICUPD = 0x1a,
-  WILLTOPICRESP,
-  WILLMSGUPD,
-  WILLMSGRESP
+  FMSNMT_ADVERTISE,
+  FMSNMT_SEARCHGW,
+  FMSNMT_GWINFO,
+  FMSNMT_CONNECT = 0x04,
+  FMSNMT_CONNACK,
+  FMSNMT_WILLTOPICREQ,
+  FMSNMT_WILLTOPIC,
+  FMSNMT_WILLMSGREQ,
+  FMSNMT_WILLMSG,
+  FMSNMT_REGISTER,
+  FMSNMT_REGACK,
+  FMSNMT_PUBLISH,
+  FMSNMT_PUBACK,
+  FMSNMT_PUBCOMP,
+  FMSNMT_PUBREC,
+  FMSNMT_PUBREL,
+  FMSNMT_SUBSCRIBE = 0x12,
+  FMSNMT_SUBACK,
+  FMSNMT_UNSUBSCRIBE,
+  FMSNMT_UNSUBACK,
+  FMSNMT_PINGREQ,
+  FMSNMT_PINGRESP,
+  FMSNMT_DISCONNECT,
+  FMSNMT_WILLTOPICUPD = 0x1a,
+  FMSNMT_WILLTOPICRESP,
+  FMSNMT_WILLMSGUPD,
+  FMSNMT_WILLMSGRESP
 };
 
-struct __attribute__ ((__packed__)) message_header
+struct __attribute__ ((__packed__)) FMSNMsgHeader
 {
   uint8_t length;
 
-  message_type type;
+  FMSNMsgType type;
 };
 
-struct __attribute__ ((__packed__)) msg_advertise:
-public message_header
+struct __attribute__ ((__packed__)) FMSNMsgAdvertise:
+public FMSNMsgHeader
 {
-  uint8_t gw_id;
+  uint8_t gwId;
 
   uint16_t duration;
 };
 
-struct __attribute__ ((__packed__)) msg_searchgw:
-public message_header
+struct __attribute__ ((__packed__)) FMSNMsgSearchgw:
+public FMSNMsgHeader
 {
   uint8_t radius;
 };
 
-struct __attribute__ ((__packed__)) msg_gwinfo:
-public message_header
+struct __attribute__ ((__packed__)) FMSNMsgGwinfo:
+public FMSNMsgHeader
 {
-  uint8_t gw_id;
+  uint8_t gwId;
 
-  char gw_add[0];
+  char gwAdd[0];
 };
 
-struct __attribute__ ((__packed__)) msg_connect:
-public message_header
+struct __attribute__ ((__packed__)) FMSNMsgConnect:
+public FMSNMsgHeader
 {
   uint8_t flags;
 
-  uint8_t  protocol_id;
+  uint8_t  protocolId;
   uint16_t duration;
-  char     client_id[0];
+  char     clientId[0];
 };
 
-struct __attribute__ ((__packed__)) msg_connack:
-public message_header
+struct __attribute__ ((__packed__)) FMSNMsgConnack:
+public FMSNMsgHeader
 {
-  return_code_t return_code;
+  FMSNReturnCode returnCode;
 };
 
-struct __attribute__ ((__packed__)) msg_willtopic:
-public message_header
+struct __attribute__ ((__packed__)) FMSNMsgWilltopic:
+public FMSNMsgHeader
 {
   uint8_t flags;
 
   char will_topic[0];
 };
 
-struct __attribute__ ((__packed__)) msg_willmsg:
-public message_header
+struct __attribute__ ((__packed__)) FMSNMsgWillmsg:
+public FMSNMsgHeader
 {
   char willmsg[0];
 };
 
-struct __attribute__ ((__packed__)) msg_register:
-public message_header
+struct __attribute__ ((__packed__)) FMSNMsgRegister:
+public FMSNMsgHeader
 {
-  uint16_t topic_id;
+  uint16_t topicId;
 
-  uint16_t message_id;
-  char     topic_name[0];
+  uint16_t messageId;
+  char     topicName[0];
 };
 
-struct __attribute__ ((__packed__)) msg_regack:
-public message_header
+struct __attribute__ ((__packed__)) FMSNMsgRegack:
+public FMSNMsgHeader
 {
-  uint16_t topic_id;
+  uint16_t topicId;
 
-  uint16_t      message_id;
-  return_code_t return_code;
+  uint16_t       messageId;
+  FMSNReturnCode returnCode;
 };
 
-struct __attribute__ ((__packed__)) msg_publish:
-public message_header
+struct __attribute__ ((__packed__)) FMSNMsgPublish:
+public FMSNMsgHeader
 {
   uint8_t flags;
 
-  uint16_t topic_id;
-  uint16_t message_id;
+  uint16_t topicId;
+  uint16_t messageId;
   char     data[0];
 };
 
-struct __attribute__ ((__packed__)) msg_puback:
-public message_header
+struct __attribute__ ((__packed__)) FMSNMsgPuback:
+public FMSNMsgHeader
 {
-  uint16_t topic_id;
+  uint16_t topicId;
 
-  uint16_t      message_id;
-  return_code_t return_code;
+  uint16_t       messageId;
+  FMSNReturnCode returnCode;
 };
 
-struct __attribute__ ((__packed__)) msg_pubqos2:
-public message_header
+struct __attribute__ ((__packed__)) FMSNMsgPubqos2:
+public FMSNMsgHeader
 {
-  uint16_t message_id;
+  uint16_t messageId;
 };
 
-struct __attribute__ ((__packed__)) msg_subscribe:
-public message_header
+struct __attribute__ ((__packed__)) FMSNMsgSubscribe:
+public FMSNMsgHeader
 {
   uint8_t flags;
 
-  uint16_t message_id;
+  uint16_t messageId;
 
   union
   {
-    char     topic_name[0];
-    uint16_t topic_id;
+    char     topicName[0];
+    uint16_t topicId;
   };
 };
 
-struct __attribute__ ((__packed__)) msg_suback:
-public message_header
+struct __attribute__ ((__packed__)) FMSNMsgSuback:
+public FMSNMsgHeader
 {
   uint8_t flags;
 
-  uint16_t      topic_id;
-  uint16_t      message_id;
-  return_code_t return_code;
+  uint16_t       topicId;
+  uint16_t       messageId;
+  FMSNReturnCode returnCode;
 };
 
-struct __attribute__ ((__packed__)) msg_unsubscribe:
-public message_header
+struct __attribute__ ((__packed__)) FMSNMsgUnsubscribe:
+public FMSNMsgHeader
 {
   uint8_t flags;
 
-  uint16_t message_id;
+  uint16_t messageId;
 
   union __attribute__ ((__packed__))
   {
-    char topic_name[0];
+    char topicName[0];
 
-    uint16_t topic_id;
+    uint16_t topicId;
   };
 };
 
-struct __attribute__ ((__packed__)) msg_unsuback:
-public message_header
+struct __attribute__ ((__packed__)) FMSNMsgUnsuback:
+public FMSNMsgHeader
 {
-  uint16_t message_id;
+  uint16_t messageId;
 };
 
-struct __attribute__ ((__packed__)) msg_pingreq:
-public message_header
+struct __attribute__ ((__packed__)) FMSNMsgPingreq:
+public FMSNMsgHeader
 {
-  char client_id[0];
+  char clientId[0];
 };
 
-struct __attribute__ ((__packed__)) msg_disconnect:
-public message_header
+struct __attribute__ ((__packed__)) FMSNMsgDisconnect:
+public FMSNMsgHeader
 {
   uint16_t duration;
 };
 
-struct __attribute__ ((__packed__)) msg_willtopicresp:
-public message_header
+struct __attribute__ ((__packed__)) FMSNMsgWilltopicresp:
+public FMSNMsgHeader
 {
-  return_code_t return_code;
+  FMSNReturnCode returnCode;
 };
 
-struct __attribute__ ((__packed__)) msg_willmsgresp:
-public message_header
+struct __attribute__ ((__packed__)) FMSNMsgWillmsgresp:
+public FMSNMsgHeader
 {
-  return_code_t return_code;
+  FMSNReturnCode returnCode;
 };
 
 #endif // __INCLUDED_FDCE12F8526A11E7AA6EA088B4D1658C

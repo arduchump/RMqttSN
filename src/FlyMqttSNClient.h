@@ -28,8 +28,8 @@
 
 #include "FlyMqttSNTypes.h"
 
-#define MAX_TOPICS      10
-#define MAX_BUFFER_SIZE 66
+#define FMSN_MAX_TOPICS      10
+#define FMSN_MAX_BUFFER_SIZE 66
 
 class FlyMqttSNClient
 {
@@ -39,28 +39,28 @@ public:
   ~FlyMqttSNClient();
 
   uint16_t
-  find_topic_id(const char *name, uint8_t&index);
+  findTopicId(const char *name, uint8_t&index);
   bool
-  wait_for_response();
+  waitForResponse();
 
   void
-  parse_stream();
+  parseStream();
 
   void
   searchgw(const uint8_t radius);
   void
-  connect(const uint8_t flags, const uint16_t duration, const char *client_id);
+  connect(const uint8_t flags, const uint16_t duration, const char *clientId);
   void
-  willtopic(const uint8_t flags, const char *will_topic,
+  willtopic(const uint8_t flags, const char *willTopic,
             const bool update=false);
   void
-  willmsg(const void *will_msg, const uint8_t will_msg_len,
+  willmsg(const void *willMsg, const uint8_t willMsgLen,
           const bool update=false);
   bool
-  register_topic(const char *name);
+  registerTopic(const char *name);
   void
-  publish(const uint8_t flags, const uint16_t topic_id, const void *data,
-          const uint8_t data_len);
+  publish(const uint8_t flags, const uint16_t topicId, const void *data,
+          const uint8_t dataLen);
 #ifdef USE_QOS2
   void
   pubrec();
@@ -70,15 +70,15 @@ public:
   pubcomp();
 #endif
   void
-  subscribe_by_name(const uint8_t flags, const char *topic_name);
+  subscribeByName(const uint8_t flags, const char *topicName);
   void
-  subscribe_by_id(const uint8_t flags, const uint16_t topic_id);
+  subscribeById(const uint8_t flags, const uint16_t topicId);
   void
-  unsubscribe_by_name(const uint8_t flags, const char *topic_name);
+  unsubscribeByName(const uint8_t flags, const char *topicName);
   void
-  unsubscribe_by_id(const uint8_t flags, const uint16_t topic_id);
+  unsubscribeById(const uint8_t flags, const uint16_t topicId);
   void
-  pingreq(const char *client_id);
+  pingreq(const char *clientId);
   void
   pingresp();
   void
@@ -89,57 +89,57 @@ public:
 
 protected:
   virtual void
-  advertise_handler(const msg_advertise *msg);
+  advertiseHandler(const FMSNMsgAdvertise *msg);
   virtual void
-  gwinfo_handler(const msg_gwinfo *msg);
+  gwinfoHandler(const FMSNMsgGwinfo *msg);
   virtual void
-  connack_handler(const msg_connack *msg);
+  connackHandler(const FMSNMsgConnack *msg);
   virtual void
-  willtopicreq_handler(const message_header *msg);
+  willtopicreqHandler(const FMSNMsgHeader *msg);
   virtual void
-  willmsgreq_handler(const message_header *msg);
+  willmsgreqHandler(const FMSNMsgHeader *msg);
   virtual void
-  regack_handler(const msg_regack *msg);
+  regackHandler(const FMSNMsgRegack *msg);
   virtual void
-  publish_handler(const msg_publish *msg);
+  publishHandler(const FMSNMsgPublish *msg);
   virtual void
-  register_handler(const msg_register *msg);
+  registerHandler(const FMSNMsgRegister *msg);
   virtual void
-  puback_handler(const msg_puback *msg);
+  pubackHandler(const FMSNMsgPuback *msg);
 
 #ifdef USE_QOS2
   virtual void
-  pubrec_handler(const msg_pubqos2 *msg);
+  pubrecHandler(const msg_pubqos2 *msg);
   virtual void
-  pubrel_handler(const msg_pubqos2 *msg);
+  pubrelHandler(const msg_pubqos2 *msg);
   virtual void
-  pubcomp_handler(const msg_pubqos2 *msg);
+  pubcompHandler(const msg_pubqos2 *msg);
 
 #endif
   virtual void
-  suback_handler(const msg_suback *msg);
+  subackHandler(const FMSNMsgSuback *msg);
   virtual void
-  unsuback_handler(const msg_unsuback *msg);
+  unsubackHandler(const FMSNMsgUnsuback *msg);
   virtual void
-  pingreq_handler(const msg_pingreq *msg);
+  pingreqHandler(const FMSNMsgPingreq *msg);
   virtual void
-  pingresp_handler();
+  pingrespHandler();
   virtual void
-  disconnect_handler(const msg_disconnect *msg);
+  disconnectHandler(const FMSNMsgDisconnect *msg);
   virtual void
-  willtopicresp_handler(const msg_willtopicresp *msg);
+  willtopicrespHandler(const FMSNMsgWilltopicresp *msg);
   virtual void
-  willmsgresp_handler(const msg_willmsgresp *msg);
+  willmsgrespHandler(const FMSNMsgWillmsgresp *msg);
 
   void
-  regack(const uint16_t topic_id, const uint16_t message_id,
-         const return_code_t return_code);
+  regack(const uint16_t topicId, const uint16_t messageId,
+         const FMSNReturnCode returnCode);
   void
-  puback(const uint16_t topic_id, const uint16_t message_id,
-         const return_code_t return_code);
+  puback(const uint16_t topicId, const uint16_t messageId,
+         const FMSNReturnCode returnCode);
 
 private:
-  struct topic
+  struct Topic
   {
     const char *name;
     uint16_t    id;
@@ -150,20 +150,20 @@ private:
   uint16_t
   bswap(const uint16_t val);
   void
-  send_message();
+  sendMessage();
 
   // Set to true when we're waiting for some sort of acknowledgement from the
   //server that will transition our state.
-  bool     waiting_for_response;
-  uint8_t  response_to_wait_for;
-  uint16_t _message_id;
-  uint8_t  topic_count;
-  uint8_t  message_buffer[MAX_BUFFER_SIZE];
-  uint8_t  response_buffer[MAX_BUFFER_SIZE];
-  topic    topic_table[MAX_TOPICS];
-  uint8_t  _gateway_id;
-  uint32_t _response_timer;
-  uint8_t  _response_retries;
+  bool     mWaitingForResponse;
+  uint8_t  mResponseToWaitFor;
+  uint16_t mMessageId;
+  uint8_t  mTopicCount;
+  uint8_t  mMessageBuffer[FMSN_MAX_BUFFER_SIZE];
+  uint8_t  mResponseBuffer[FMSN_MAX_BUFFER_SIZE];
+  Topic    mTopicTable[FMSN_MAX_TOPICS];
+  uint8_t  mGatewayId;
+  uint32_t mResponseTimer;
+  uint8_t  mResponseRetries;
 
   /// Target stream we will send to.
   Stream *mStream;
