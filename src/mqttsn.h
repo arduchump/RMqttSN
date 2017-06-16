@@ -27,6 +27,9 @@ THE SOFTWARE.
 #ifndef __MQTTSN_H__
 #define __MQTTSN_H__
 
+// Predefined USE_SERIAL to use serial as our communication line
+#define USE_SERIAL 1
+
 #define PROTOCOL_ID 0x01
 
 #define FLAG_DUP 0x80
