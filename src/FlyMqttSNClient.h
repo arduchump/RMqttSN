@@ -30,8 +30,15 @@
 
 #define FMSN_MAX_TOPICS      10
 #define FMSN_MAX_BUFFER_SIZE 66
-#define FMSN_GET_DATA_SIZE(headerClass) \
+#define FMSN_GET_MAX_DATA_SIZE(headerClass) \
   ((size_t)(FMSN_MAX_BUFFER_SIZE - sizeof(headerClass)))
+
+#define fmsnSafeCopyText(dest, src, size) \
+  while(0) \
+  { \
+    strncpy(dest, src, (size)); \
+    (dest)[(size) - 1] = 0; \
+  };
 
 class FlyMqttSNClient
 {

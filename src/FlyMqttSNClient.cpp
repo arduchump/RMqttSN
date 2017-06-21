@@ -480,7 +480,8 @@ FlyMqttSNClient::connect(const uint8_t flags, const uint16_t duration,
   msg->protocolId = FMSN_PROTOCOL_ID;
   msg->duration   = bswap(duration);
 
-  strncpy(msg->clientId, clientId, FMSN_GET_DATA_SIZE(FMSNMsgConnect));
+  fmsnSafeCopyText(msg->clientId, clientId,
+                   FMSN_GET_MAX_DATA_SIZE(FMSNMsgConnect));
 
   sendMessage();
   mWaitingForResponse = true;
@@ -505,7 +506,8 @@ FlyMqttSNClient::willtopic(const uint8_t flags, const char *willTopic,
 
     msg->type  = update ? FMSNMT_WILLTOPICUPD : FMSNMT_WILLTOPIC;
     msg->flags = flags;
-    strncpy(msg->willTopic, willTopic, FMSN_GET_DATA_SIZE(FMSNMsgWilltopic));
+    fmsnSafeCopyText(msg->willTopic, willTopic,
+                     FMSN_GET_MAX_DATA_SIZE(FMSNMsgWilltopic));
   }
 
   sendMessage();
@@ -568,7 +570,8 @@ FlyMqttSNClient::registerTopic(const char *name)
     msg->type      = FMSNMT_REGISTER;
     msg->topicId   = 0;
     msg->messageId = bswap(mMessageId);
-    strncpy(msg->topicName, name, FMSN_GET_DATA_SIZE(FMSNMsgRegister));
+    fmsnSafeCopyText(msg->topicName, name,
+                     FMSN_GET_MAX_DATA_SIZE(FMSNMsgRegister));
 
     sendMessage();
     mWaitingForResponse = true;
@@ -686,7 +689,8 @@ FlyMqttSNClient::subscribeByName(const uint8_t flags, const char *topicName)
   msg->type      = FMSNMT_SUBSCRIBE;
   msg->flags     = (flags & FMSN_QOS_MASK) | FMSN_FLAG_TOPIC_NAME;
   msg->messageId = bswap(mMessageId);
-  strncpy(msg->topicName, topicName, FMSN_GET_DATA_SIZE(FMSNMsgSubscribe) - 2);
+  fmsnSafeCopyText(msg->topicName, topicName, FMSN_GET_MAX_DATA_SIZE(
+                     FMSNMsgSubscribe) - 2);
 
   sendMessage();
 
@@ -735,8 +739,8 @@ FlyMqttSNClient::unsubscribeByName(const uint8_t flags, const char *topicName)
   msg->type      = FMSNMT_UNSUBSCRIBE;
   msg->flags     = (flags & FMSN_QOS_MASK) | FMSN_FLAG_TOPIC_NAME;
   msg->messageId = bswap(mMessageId);
-  strncpy(msg->topicName, topicName,
-          FMSN_GET_DATA_SIZE(FMSNMsgUnsubscribe) - 2);
+  fmsnSafeCopyText(msg->topicName, topicName,
+                   FMSN_GET_MAX_DATA_SIZE(FMSNMsgUnsubscribe) - 2);
 
   sendMessage();
 
@@ -779,7 +783,8 @@ FlyMqttSNClient::pingreq(const char *clientId)
 
   msg->length = sizeof(FMSNMsgPingreq) + strlen(clientId);
   msg->type   = FMSNMT_PINGREQ;
-  strncpy(msg->clientId, clientId, FMSN_GET_DATA_SIZE(FMSNMsgPingreq));
+  fmsnSafeCopyText(msg->clientId, clientId,
+                   FMSN_GET_MAX_DATA_SIZE(FMSNMsgPingreq));
 
   sendMessage();
 
