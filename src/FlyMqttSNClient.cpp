@@ -28,7 +28,7 @@
 #include "FlyMqttSNClient.h"
 
 FlyMqttSNClient::FlyMqttSNClient(Stream *stream) :
-  mWaitingForResponse(true),
+  mWaitingForResponse(false),
   mResponseToWaitFor(FMSNMT_ADVERTISE),
   mMessageId(0),
   mTopicCount(0),
@@ -301,7 +301,7 @@ FlyMqttSNClient::sendMessage()
 void
 FlyMqttSNClient::timeout()
 {
-  mWaitingForResponse = true;
+  mWaitingForResponse = false;
   mResponseToWaitFor  = fmsnGetRespondType(FMSNMT_ADVERTISE);
 }
 
