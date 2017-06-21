@@ -548,7 +548,7 @@ FlyMqttSNClient::disconnect(const uint16_t duration)
 
   sendMessage();
   mWaitingForResponse = true;
-  mResponseToWaitFor  = fmsnGetRespondType(FMSNMT_DISCONNECT);
+  mResponseToWaitFor  = fmsnGetRespondType(msg->type);
 }
 
 bool
