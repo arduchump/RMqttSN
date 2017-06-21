@@ -56,18 +56,6 @@
 #define FMSN_T_RETRY     15
 #define FMSN_N_RETRY     5
 
-///
-/// Get respond type from a reqeuest type.
-///
-/// Mqtt-SN message have a request-respond pattern, respond message types are
-/// numbers followed after request message types except types list below:
-///
-/// FMSNMT_ADVERTISE, FMSNMT_DISCONNECT
-///
-/// @arg requestType
-#define FMSNMT_RESPOND_TYPE(requestType) \
-  static_cast<FMSNMsgType>(((requestType) + 1))
-
 enum FMSNReturnCode
 {
   FMSNRC_ACCEPTED,
@@ -277,5 +265,12 @@ public FMSNMsgHeader
 {
   FMSNReturnCode returnCode;
 };
+
+///
+/// Get respond type from a reqeuest type.
+///
+/// @arg requestType
+FMSNMsgType
+fmsnGetRespondType(FMSNMsgType requestType);
 
 #endif // __INCLUDED_FDCE12F8526A11E7AA6EA088B4D1658C
