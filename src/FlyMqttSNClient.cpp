@@ -34,6 +34,7 @@ FlyMqttSNClient::FlyMqttSNClient(Stream *stream) :
   mTopicCount(0),
   mGatewayId(0),
   mFlags(FMSN_FLAG_QOS_0),
+  mKeepAliveInterval(30),
   mResponseTimer(0),
   mResponseRetries(0),
   mStream(stream)
@@ -311,6 +312,18 @@ FlyMqttSNClient::sendMessage()
   }
 }
 
+uint16_t
+FlyMqttSNClient::keepAliveInterval() const
+{
+  return mKeepAliveInterval;
+}
+
+void
+FlyMqttSNClient::setKeepAliveInterval(const uint16_t &keepAliveInterval)
+{
+  mKeepAliveInterval = keepAliveInterval;
+}
+
 void
 FlyMqttSNClient::timeout()
 {
@@ -482,7 +495,7 @@ FlyMqttSNClient::searchgw(const uint8_t radius)
 }
 
 void
-FlyMqttSNClient::connect(const uint16_t duration, const char *clientId)
+FlyMqttSNClient::connect(const char *clientId)
 {
   FMSNMsgConnect *msg = reinterpret_cast<FMSNMsgConnect *>(mMessageBuffer);
 
@@ -490,7 +503,7 @@ FlyMqttSNClient::connect(const uint16_t duration, const char *clientId)
   msg->type       = FMSNMT_CONNECT;
   msg->flags      = mFlags;
   msg->protocolId = FMSN_PROTOCOL_ID;
-  msg->duration   = bswap(duration);
+  msg->duration   = bswap(mKeepAliveInterval);
 
   fmsnSafeCopyText(msg->clientId, clientId,
                    FMSN_GET_MAX_DATA_SIZE(FMSNMsgConnect));

@@ -64,7 +64,7 @@ public:
   void
   searchgw(const uint8_t radius);
   void
-  connect(const uint16_t duration, const char *clientId);
+  connect(const char *clientId);
   void
   willtopic(const uint8_t flags, const char *willTopic,
             const bool update=false);
@@ -101,6 +101,11 @@ public:
 
   virtual void
   timeout();
+
+  uint16_t
+  keepAliveInterval() const;
+  void
+  setKeepAliveInterval(const uint16_t &keepAliveInterval);
 
 protected:
   virtual void
@@ -179,6 +184,7 @@ private:
   uint8_t  mGatewayId;
   /// Default flags
   uint8_t  mFlags;
+  uint16_t mKeepAliveInterval;
   uint32_t mResponseTimer;
   uint8_t  mResponseRetries;
 
