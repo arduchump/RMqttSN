@@ -56,6 +56,8 @@
 #define FMSN_T_RETRY     15
 #define FMSN_N_RETRY     5
 
+#define FMSN_INVALID_TOPIC_ID 0xFFFF
+
 enum FMSNReturnCode
 {
   FMSNRC_ACCEPTED,

@@ -105,7 +105,7 @@ FlyMqttSNClient::findTopicId(const char *name, uint8_t&index)
     }
   }
 
-  return 0xffff;
+  return FMSN_INVALID_TOPIC_ID;
 }
 
 void
@@ -473,7 +473,7 @@ FlyMqttSNClient::registerHandler(const FMSNMsgRegister *msg)
 
   findTopicId(msg->topicName, index);
 
-  if(index != 0xffff)
+  if(index != FMSN_INVALID_TOPIC_ID)
   {
     mTopicTable[index].id = bswap(msg->topicId);
     ret = FMSNRC_ACCEPTED;
