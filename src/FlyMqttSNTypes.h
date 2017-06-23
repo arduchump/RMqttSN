@@ -268,11 +268,4 @@ public FMSNMsgHeader
   FMSNReturnCode returnCode;
 };
 
-///
-/// Get respond type from a reqeuest type.
-///
-/// @arg requestType
-FMSNMsgType
-fmsnGetRespondType(FMSNMsgType requestType);
-
 #endif // __INCLUDED_FDCE12F8526A11E7AA6EA088B4D1658C

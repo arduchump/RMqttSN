@@ -26,6 +26,7 @@
 #include <Arduino.h>
 
 #include "FlyMqttSNClient.h"
+#include "FlyMqttSNUtils.h"
 
 FlyMqttSNClient::FlyMqttSNClient(Stream *stream) :
   mWaitingForResponse(false),
@@ -651,7 +652,7 @@ FlyMqttSNClient::publish(const uint16_t topicId, const void *data,
 
   sendMessage();
 
-  if(qos() == FMSN_FLAG_QOS_1 || qos() == FMSN_FLAG_QOS_2)
+  if(fmsnIsHighQos(qos()))
   {
     mWaitingForResponse = true;
     mResponseToWaitFor  = fmsnGetRespondType(FMSNMT_PUBLISH);
@@ -730,7 +731,7 @@ FlyMqttSNClient::subscribeByName(const char *topicName)
 
   sendMessage();
 
-  if(qos() == FMSN_FLAG_QOS_1 || qos() == FMSN_FLAG_QOS_2)
+  if(fmsnIsHighQos(qos()))
   {
     mWaitingForResponse = true;
     mResponseToWaitFor  = fmsnGetRespondType(msg->type);
@@ -752,7 +753,7 @@ FlyMqttSNClient::subscribeById(const uint16_t topicId)
 
   sendMessage();
 
-  if(qos() == FMSN_FLAG_QOS_1 || qos() == FMSN_FLAG_QOS_2)
+  if(fmsnIsHighQos(qos()))
   {
     mWaitingForResponse = true;
     mResponseToWaitFor  = fmsnGetRespondType(msg->type);
@@ -778,7 +779,7 @@ FlyMqttSNClient::unsubscribeByName(const char *topicName)
 
   sendMessage();
 
-  if(qos() == FMSN_FLAG_QOS_1 || qos() == FMSN_FLAG_QOS_2)
+  if(fmsnIsHighQos(qos()))
   {
     mWaitingForResponse = true;
     mResponseToWaitFor  = fmsnGetRespondType(msg->type);
@@ -801,7 +802,7 @@ FlyMqttSNClient::unsubscribeById(const uint16_t topicId)
 
   sendMessage();
 
-  if((qos() == FMSN_FLAG_QOS_1) || (qos() == FMSN_FLAG_QOS_2))
+  if(fmsnIsHighQos(qos()))
   {
     mWaitingForResponse = true;
     mResponseToWaitFor  = fmsnGetRespondType(msg->type);
