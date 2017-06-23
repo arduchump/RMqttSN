@@ -482,14 +482,13 @@ FlyMqttSNClient::searchgw(const uint8_t radius)
 }
 
 void
-FlyMqttSNClient::connect(const uint8_t flags, const uint16_t duration,
-                         const char *clientId)
+FlyMqttSNClient::connect(const uint16_t duration, const char *clientId)
 {
   FMSNMsgConnect *msg = reinterpret_cast<FMSNMsgConnect *>(mMessageBuffer);
 
   msg->length     = sizeof(FMSNMsgConnect) + strlen(clientId);
   msg->type       = FMSNMT_CONNECT;
-  msg->flags      = flags;
+  msg->flags      = mFlags;
   msg->protocolId = FMSN_PROTOCOL_ID;
   msg->duration   = bswap(duration);
 

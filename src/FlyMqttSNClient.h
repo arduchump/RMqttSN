@@ -64,7 +64,7 @@ public:
   void
   searchgw(const uint8_t radius);
   void
-  connect(const uint8_t flags, const uint16_t duration, const char *clientId);
+  connect(const uint16_t duration, const char *clientId);
   void
   willtopic(const uint8_t flags, const char *willTopic,
             const bool update=false);
