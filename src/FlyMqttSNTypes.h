@@ -94,7 +94,10 @@ enum __attribute__ ((__packed__)) FMSNMsgType
   FMSNMT_WILLTOPICUPD = 0x1a,
   FMSNMT_WILLTOPICRESP,
   FMSNMT_WILLMSGUPD,
-  FMSNMT_WILLMSGRESP
+  FMSNMT_WILLMSGRESP,
+
+  /// Reserved value in mqtt, but we use as invalid value.
+  FMSNMT_INVALID = 0xff,
 };
 
 struct __attribute__ ((__packed__)) FMSNMsgHeader

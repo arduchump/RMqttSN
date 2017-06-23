@@ -175,9 +175,8 @@ private:
   void
   sendMessage();
 
-  // Set to true when we're waiting for some sort of acknowledgement from the
-  //server that will transition our state.
-  bool     mWaitingForResponse;
+  /// Set to valid message type when we're waiting for some sort of
+  /// acknowledgement from the server that will transition our state.
   uint8_t  mResponseToWaitFor;
   uint16_t mMessageId;
   uint8_t  mTopicCount;
