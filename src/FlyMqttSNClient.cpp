@@ -312,6 +312,18 @@ FlyMqttSNClient::sendMessage()
   }
 }
 
+String
+FlyMqttSNClient::clientId() const
+{
+  return mClientId;
+}
+
+void
+FlyMqttSNClient::setClientId(const String &clientId)
+{
+  mClientId = clientId;
+}
+
 uint16_t
 FlyMqttSNClient::keepAliveInterval() const
 {
@@ -495,17 +507,18 @@ FlyMqttSNClient::searchgw(const uint8_t radius)
 }
 
 void
-FlyMqttSNClient::connect(const char *clientId)
+FlyMqttSNClient::connect()
 {
   FMSNMsgConnect *msg = reinterpret_cast<FMSNMsgConnect *>(mMessageBuffer);
 
-  msg->length     = sizeof(FMSNMsgConnect) + strlen(clientId);
+  msg->length =
+    static_cast<uint8_t>(sizeof(FMSNMsgConnect) + mClientId.length());
   msg->type       = FMSNMT_CONNECT;
   msg->flags      = mFlags;
   msg->protocolId = FMSN_PROTOCOL_ID;
   msg->duration   = bswap(mKeepAliveInterval);
 
-  fmsnSafeCopyText(msg->clientId, clientId,
+  fmsnSafeCopyText(msg->clientId, mClientId.c_str(),
                    FMSN_GET_MAX_DATA_SIZE(FMSNMsgConnect));
 
   sendMessage();

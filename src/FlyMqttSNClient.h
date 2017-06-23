@@ -64,7 +64,7 @@ public:
   void
   searchgw(const uint8_t radius);
   void
-  connect(const char *clientId);
+  connect();
   void
   willtopic(const uint8_t flags, const char *willTopic,
             const bool update=false);
@@ -106,6 +106,11 @@ public:
   keepAliveInterval() const;
   void
   setKeepAliveInterval(const uint16_t &keepAliveInterval);
+
+  String
+  clientId() const;
+  void
+  setClientId(const String &clientId);
 
 protected:
   virtual void
@@ -190,6 +195,7 @@ private:
 
   /// Target stream we will send to.
   Stream *mStream;
+  String  mClientId;
 };
 
 #endif // __INCLUDED_E457D8FE526A11E7AA6EA088B4D1658C
