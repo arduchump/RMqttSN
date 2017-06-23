@@ -34,11 +34,11 @@
   ((size_t)(FMSN_MAX_BUFFER_SIZE - sizeof(headerClass)))
 
 #define fmsnSafeCopyText(dest, src, size) \
-  while(0) \
+  do \
   { \
     strncpy(dest, src, (size)); \
     (dest)[(size) - 1] = 0; \
-  };
+  } while(0);
 
 class FlyMqttSNClient
 {
