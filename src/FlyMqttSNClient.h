@@ -66,16 +66,14 @@ public:
   void
   connect();
   void
-  willtopic(const uint8_t flags, const char *willTopic,
-            const bool update=false);
+  willtopic(const char *willTopic, const bool update=false);
   void
   willmsg(const void *willMsg, const uint8_t willMsgLen,
           const bool update=false);
   bool
   registerTopic(const char *name);
   void
-  publish(const uint8_t flags, const uint16_t topicId, const void *data,
-          const uint8_t dataLen);
+  publish(const uint16_t topicId, const void *data, const uint8_t dataLen);
 #ifdef USE_QOS2
   void
   pubrec();
@@ -85,13 +83,13 @@ public:
   pubcomp();
 #endif
   void
-  subscribeByName(const uint8_t flags, const char *topicName);
+  subscribeByName(const char *topicName);
   void
-  subscribeById(const uint8_t flags, const uint16_t topicId);
+  subscribeById(const uint16_t topicId);
   void
-  unsubscribeByName(const uint8_t flags, const char *topicName);
+  unsubscribeByName(const char *topicName);
   void
-  unsubscribeById(const uint8_t flags, const uint16_t topicId);
+  unsubscribeById(const uint16_t topicId);
   void
   pingreq(const char *clientId);
   void

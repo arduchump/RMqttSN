@@ -527,8 +527,7 @@ FlyMqttSNClient::connect()
 }
 
 void
-FlyMqttSNClient::willtopic(const uint8_t flags, const char *willTopic,
-                           const bool update)
+FlyMqttSNClient::willtopic(const char *willTopic, const bool update)
 {
   if(willTopic == NULL)
   {
@@ -543,14 +542,14 @@ FlyMqttSNClient::willtopic(const uint8_t flags, const char *willTopic,
       reinterpret_cast<FMSNMsgWilltopic *>(mMessageBuffer);
 
     msg->type  = update ? FMSNMT_WILLTOPICUPD : FMSNMT_WILLTOPIC;
-    msg->flags = flags;
+    msg->flags = mFlags;
     fmsnSafeCopyText(msg->willTopic, willTopic,
                      FMSN_GET_MAX_DATA_SIZE(FMSNMsgWilltopic));
   }
 
   sendMessage();
 
-//    if ((flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_1 || (flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_2) {
+//    if (qos() == FMSN_FLAG_QOS_1 || qos() == FMSN_FLAG_QOS_2) {
 //        waitingForResponse = true;
 //        responseToWaitFor = WILLMSGREQ;
 //    }
@@ -636,8 +635,8 @@ FlyMqttSNClient::regack(const uint16_t topicId, const uint16_t messageId,
 }
 
 void
-FlyMqttSNClient::publish(const uint8_t flags, const uint16_t topicId,
-                         const void *data, const uint8_t dataLen)
+FlyMqttSNClient::publish(const uint16_t topicId, const void *data,
+                         const uint8_t dataLen)
 {
   ++mMessageId;
 
@@ -645,15 +644,14 @@ FlyMqttSNClient::publish(const uint8_t flags, const uint16_t topicId,
 
   msg->length    = sizeof(FMSNMsgPublish) + dataLen;
   msg->type      = FMSNMT_PUBLISH;
-  msg->flags     = flags;
+  msg->flags     = mFlags;
   msg->topicId   = bswap(topicId);
   msg->messageId = bswap(mMessageId);
   memcpy(msg->data, data, dataLen);
 
   sendMessage();
 
-  if((flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_1 ||
-     (flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_2)
+  if(qos() == FMSN_FLAG_QOS_1 || qos() == FMSN_FLAG_QOS_2)
   {
     mWaitingForResponse = true;
     mResponseToWaitFor  = fmsnGetRespondType(FMSNMT_PUBLISH);
@@ -715,7 +713,7 @@ FlyMqttSNClient::puback(const uint16_t topicId, const uint16_t messageId,
 }
 
 void
-FlyMqttSNClient::subscribeByName(const uint8_t flags, const char *topicName)
+FlyMqttSNClient::subscribeByName(const char *topicName)
 {
   ++mMessageId;
 
@@ -725,15 +723,14 @@ FlyMqttSNClient::subscribeByName(const uint8_t flags, const char *topicName)
   // with a uint16_t in the msg_subscribe struct.
   msg->length    = sizeof(FMSNMsgSubscribe) + strlen(topicName) - 2;
   msg->type      = FMSNMT_SUBSCRIBE;
-  msg->flags     = (flags & FMSN_QOS_MASK) | FMSN_FLAG_TOPIC_NAME;
+  msg->flags     = qos() | FMSN_FLAG_TOPIC_NAME;
   msg->messageId = bswap(mMessageId);
   fmsnSafeCopyText(msg->topicName, topicName, FMSN_GET_MAX_DATA_SIZE(
                      FMSNMsgSubscribe) - 2);
 
   sendMessage();
 
-  if((flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_1 ||
-     (flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_2)
+  if(qos() == FMSN_FLAG_QOS_1 || qos() == FMSN_FLAG_QOS_2)
   {
     mWaitingForResponse = true;
     mResponseToWaitFor  = fmsnGetRespondType(msg->type);
@@ -741,7 +738,7 @@ FlyMqttSNClient::subscribeByName(const uint8_t flags, const char *topicName)
 }
 
 void
-FlyMqttSNClient::subscribeById(const uint8_t flags, const uint16_t topicId)
+FlyMqttSNClient::subscribeById(const uint16_t topicId)
 {
   ++mMessageId;
 
@@ -749,14 +746,13 @@ FlyMqttSNClient::subscribeById(const uint8_t flags, const uint16_t topicId)
 
   msg->length    = sizeof(FMSNMsgSubscribe);
   msg->type      = FMSNMT_SUBSCRIBE;
-  msg->flags     = (flags & FMSN_QOS_MASK) | FMSN_FLAG_TOPIC_PREDEFINED_ID;
+  msg->flags     = qos() | FMSN_FLAG_TOPIC_PREDEFINED_ID;
   msg->messageId = bswap(mMessageId);
   msg->topicId   = bswap(topicId);
 
   sendMessage();
 
-  if((flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_1 ||
-     (flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_2)
+  if(qos() == FMSN_FLAG_QOS_1 || qos() == FMSN_FLAG_QOS_2)
   {
     mWaitingForResponse = true;
     mResponseToWaitFor  = fmsnGetRespondType(msg->type);
@@ -764,7 +760,7 @@ FlyMqttSNClient::subscribeById(const uint8_t flags, const uint16_t topicId)
 }
 
 void
-FlyMqttSNClient::unsubscribeByName(const uint8_t flags, const char *topicName)
+FlyMqttSNClient::unsubscribeByName(const char *topicName)
 {
   ++mMessageId;
 
@@ -775,15 +771,14 @@ FlyMqttSNClient::unsubscribeByName(const uint8_t flags, const char *topicName)
   // with a uint16_t in the msg_unsubscribe struct.
   msg->length    = sizeof(FMSNMsgUnsubscribe) + strlen(topicName) - 2;
   msg->type      = FMSNMT_UNSUBSCRIBE;
-  msg->flags     = (flags & FMSN_QOS_MASK) | FMSN_FLAG_TOPIC_NAME;
+  msg->flags     = qos() | FMSN_FLAG_TOPIC_NAME;
   msg->messageId = bswap(mMessageId);
   fmsnSafeCopyText(msg->topicName, topicName,
                    FMSN_GET_MAX_DATA_SIZE(FMSNMsgUnsubscribe) - 2);
 
   sendMessage();
 
-  if((flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_1 ||
-     (flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_2)
+  if(qos() == FMSN_FLAG_QOS_1 || qos() == FMSN_FLAG_QOS_2)
   {
     mWaitingForResponse = true;
     mResponseToWaitFor  = fmsnGetRespondType(msg->type);
@@ -791,7 +786,7 @@ FlyMqttSNClient::unsubscribeByName(const uint8_t flags, const char *topicName)
 }
 
 void
-FlyMqttSNClient::unsubscribeById(const uint8_t flags, const uint16_t topicId)
+FlyMqttSNClient::unsubscribeById(const uint16_t topicId)
 {
   ++mMessageId;
 
@@ -800,14 +795,13 @@ FlyMqttSNClient::unsubscribeById(const uint8_t flags, const uint16_t topicId)
 
   msg->length    = sizeof(FMSNMsgUnsubscribe);
   msg->type      = FMSNMT_UNSUBSCRIBE;
-  msg->flags     = (flags & FMSN_QOS_MASK) | FMSN_FLAG_TOPIC_PREDEFINED_ID;
+  msg->flags     = qos() | FMSN_FLAG_TOPIC_PREDEFINED_ID;
   msg->messageId = bswap(mMessageId);
   msg->topicId   = bswap(topicId);
 
   sendMessage();
 
-  if((flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_1 ||
-     (flags & FMSN_QOS_MASK) == FMSN_FLAG_QOS_2)
+  if((qos() == FMSN_FLAG_QOS_1) || (qos() == FMSN_FLAG_QOS_2))
   {
     mWaitingForResponse = true;
     mResponseToWaitFor  = fmsnGetRespondType(msg->type);
