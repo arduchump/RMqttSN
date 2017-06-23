@@ -33,6 +33,7 @@ FlyMqttSNClient::FlyMqttSNClient(Stream *stream) :
   mMessageId(0),
   mTopicCount(0),
   mGatewayId(0),
+  mFlags(FMSN_FLAG_QOS_0),
   mResponseTimer(0),
   mResponseRetries(0),
   mStream(stream)
@@ -44,6 +45,18 @@ FlyMqttSNClient::FlyMqttSNClient(Stream *stream) :
 
 FlyMqttSNClient::~FlyMqttSNClient()
 {
+}
+
+void
+FlyMqttSNClient::setQos(uint8_t qos)
+{
+  mFlags |= (qos & FMSN_QOS_MASK);
+}
+
+uint8_t
+FlyMqttSNClient::qos()
+{
+  return mFlags & FMSN_QOS_MASK;
 }
 
 bool

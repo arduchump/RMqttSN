@@ -47,6 +47,12 @@ public:
   virtual
   ~FlyMqttSNClient();
 
+  void
+  setQos(uint8_t qos);
+
+  uint8_t
+  qos();
+
   uint16_t
   findTopicId(const char *name, uint8_t&index);
   bool
@@ -171,6 +177,8 @@ private:
   uint8_t  mResponseBuffer[FMSN_MAX_BUFFER_SIZE];
   Topic    mTopicTable[FMSN_MAX_TOPICS];
   uint8_t  mGatewayId;
+  /// Default flags
+  uint8_t  mFlags;
   uint32_t mResponseTimer;
   uint8_t  mResponseRetries;
 
