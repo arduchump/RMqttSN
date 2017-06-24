@@ -10,13 +10,13 @@ public:
 
 protected:
   virtual void
-  pubackHandler(const FMSNMsgPuback *msg);
+  pubAckHandler(const FMSNMsgPubAck *msg);
   virtual void
-  connackHandler(const FMSNMsgConnack *msg);
+  connAckHandler(const FMSNMsgConnAck *msg);
   virtual void
-  regackHandler(const FMSNMsgRegack *msg);
+  regAckHandler(const FMSNMsgRegAck *msg);
 
-//  virtual void pubackHandler(const FMSNMsgPuback *msg);
+//  virtual void pubackHandler(const FMSNMsgPubAck *msg);
 };
 
 static MqttClient
@@ -129,27 +129,27 @@ loop()
 }
 
 void
-MqttClient::pubackHandler(const FMSNMsgPuback *msg)
+MqttClient::pubAckHandler(const FMSNMsgPubAck *msg)
 {
-  FMSNClient::pubackHandler(msg);
+  FMSNClient::pubAckHandler(msg);
 
   Serial.println(F("Published!"));
   ++sProgress;
 }
 
 void
-MqttClient::connackHandler(const FMSNMsgConnack *msg)
+MqttClient::connAckHandler(const FMSNMsgConnAck *msg)
 {
-  FMSNClient::connackHandler(msg);
+  FMSNClient::connAckHandler(msg);
 
   Serial.println(F("Connected!"));
   ++sProgress;
 }
 
 void
-MqttClient::regackHandler(const FMSNMsgRegack *msg)
+MqttClient::regAckHandler(const FMSNMsgRegAck *msg)
 {
-  FMSNClient::regackHandler(msg);
+  FMSNClient::regAckHandler(msg);
 
   Serial.println(F("Registerred!"));
   ++sProgress;

@@ -128,14 +128,14 @@ FMSNBasicClient::dispatch()
     break;
 
   case FMSNMT_GWINFO:
-    gwinfoHandler((FMSNMsgGwinfo *)mResponseBuffer);
+    gwInfoHandler((FMSNMsgGwInfo *)mResponseBuffer);
     break;
 
   case FMSNMT_CONNACK:
 
     if(mResponseToWaitFor == FMSNMT_CONNACK)
     {
-      connackHandler((FMSNMsgConnack *)mResponseBuffer);
+      connAckHandler((FMSNMsgConnAck *)mResponseBuffer);
     }
     else
     {
@@ -145,11 +145,11 @@ FMSNBasicClient::dispatch()
     break;
 
   case FMSNMT_WILLTOPICREQ:
-    willtopicreqHandler(responseMessage);
+    willTopicReqHandler(responseMessage);
     break;
 
   case FMSNMT_WILLMSGREQ:
-    willmsgreqHandler(responseMessage);
+    willMsgReqHandler(responseMessage);
     break;
 
   case FMSNMT_REGISTER:
@@ -160,7 +160,7 @@ FMSNBasicClient::dispatch()
 
     if(mResponseToWaitFor == FMSNMT_REGACK)
     {
-      regackHandler((FMSNMsgRegack *)mResponseBuffer);
+      regAckHandler((FMSNMsgRegAck *)mResponseBuffer);
     }
     else
     {
@@ -177,7 +177,7 @@ FMSNBasicClient::dispatch()
 
     if(mResponseToWaitFor == FMSNMT_PUBACK)
     {
-      pubackHandler((FMSNMsgPuback *)mResponseBuffer);
+      pubAckHandler((FMSNMsgPubAck *)mResponseBuffer);
     }
     else
     {
@@ -190,7 +190,7 @@ FMSNBasicClient::dispatch()
 
     if(mResponseToWaitFor == FMSNMT_SUBACK)
     {
-      subackHandler((FMSNMsgSuback *)mResponseBuffer);
+      subAckHandler((FMSNMsgSubAck *)mResponseBuffer);
     }
     else
     {
@@ -203,7 +203,7 @@ FMSNBasicClient::dispatch()
 
     if(mResponseToWaitFor == FMSNMT_UNSUBACK)
     {
-      unsubackHandler((FMSNMsgUnsuback *)mResponseBuffer);
+      unsubAckHandler((FMSNMsgUnsubAck *)mResponseBuffer);
     }
     else
     {
@@ -213,14 +213,14 @@ FMSNBasicClient::dispatch()
     break;
 
   case FMSNMT_PINGREQ:
-    pingreqHandler((FMSNMsgPingreq *)mResponseBuffer);
+    pingReqHandler((FMSNMsgPingReq *)mResponseBuffer);
     break;
 
   case FMSNMT_PINGRESP:
 
     if(mResponseToWaitFor == FMSNMT_PINGRESP)
     {
-      pingrespHandler();
+      pingRespHandler();
     }
     else
     {
@@ -237,7 +237,7 @@ FMSNBasicClient::dispatch()
 
     if(mResponseToWaitFor == FMSNMT_WILLTOPICRESP)
     {
-      willtopicrespHandler((FMSNMsgWilltopicresp *)mResponseBuffer);
+      willTopicRespHandler((FMSNMsgWillTopicResp *)mResponseBuffer);
     }
     else
     {
@@ -250,7 +250,7 @@ FMSNBasicClient::dispatch()
 
     if(mResponseToWaitFor == FMSNMT_WILLMSGRESP)
     {
-      willmsgrespHandler((FMSNMsgWillmsgresp *)mResponseBuffer);
+      willMsgRespHandler((FMSNMsgWillMsgResp *)mResponseBuffer);
     }
     else
     {
@@ -329,27 +329,27 @@ FMSNBasicClient::advertiseHandler(const FMSNMsgAdvertise *msg)
 }
 
 void
-FMSNBasicClient::gwinfoHandler(const FMSNMsgGwinfo *msg)
+FMSNBasicClient::gwInfoHandler(const FMSNMsgGwInfo *msg)
 {
 }
 
 void
-FMSNBasicClient::connackHandler(const FMSNMsgConnack *msg)
+FMSNBasicClient::connAckHandler(const FMSNMsgConnAck *msg)
 {
 }
 
 void
-FMSNBasicClient::willtopicreqHandler(const FMSNMsgHeader *msg)
+FMSNBasicClient::willTopicReqHandler(const FMSNMsgHeader *msg)
 {
 }
 
 void
-FMSNBasicClient::willmsgreqHandler(const FMSNMsgHeader *msg)
+FMSNBasicClient::willMsgReqHandler(const FMSNMsgHeader *msg)
 {
 }
 
 void
-FMSNBasicClient::regackHandler(const FMSNMsgRegack *msg)
+FMSNBasicClient::regAckHandler(const FMSNMsgRegAck *msg)
 {
   if(msg->returnCode == 0 && mTopicCount < FMSN_MAX_TOPICS &&
      bswap(msg->messageId) == mMessageId)
@@ -375,7 +375,7 @@ FMSNBasicClient::regackHandler(const FMSNMsgRegack *msg)
 }
 
 void
-FMSNBasicClient::pubackHandler(const FMSNMsgPuback *msg)
+FMSNBasicClient::pubAckHandler(const FMSNMsgPubAck *msg)
 {
 }
 
@@ -398,18 +398,18 @@ MQTTSN::pubcompHandler(const msg_pubqos2 *msg)
 #endif
 
 void
-FMSNBasicClient::pingreqHandler(const FMSNMsgPingreq *msg)
+FMSNBasicClient::pingReqHandler(const FMSNMsgPingReq *msg)
 {
-  pingresp();
+  pingResp();
 }
 
 void
-FMSNBasicClient::subackHandler(const FMSNMsgSuback *msg)
+FMSNBasicClient::subAckHandler(const FMSNMsgSubAck *msg)
 {
 }
 
 void
-FMSNBasicClient::unsubackHandler(const FMSNMsgUnsuback *msg)
+FMSNBasicClient::unsubAckHandler(const FMSNMsgUnsubAck *msg)
 {
 }
 
@@ -419,7 +419,7 @@ FMSNBasicClient::disconnectHandler(const FMSNMsgDisconnect *msg)
 }
 
 void
-FMSNBasicClient::pingrespHandler()
+FMSNBasicClient::pingRespHandler()
 {
 }
 
@@ -440,7 +440,7 @@ FMSNBasicClient::publishHandler(const FMSNMsgPublish *msg)
       }
     }
 
-    puback(msg->topicId, msg->messageId, ret);
+    pubAck(msg->topicId, msg->messageId, ret);
   }
 }
 
@@ -457,25 +457,25 @@ FMSNBasicClient::registerHandler(const FMSNMsgRegister *msg)
     ret = FMSNRC_ACCEPTED;
   }
 
-  regack(msg->topicId, msg->messageId, ret);
+  regAck(msg->topicId, msg->messageId, ret);
 }
 
 void
-FMSNBasicClient::willtopicrespHandler(const FMSNMsgWilltopicresp *msg)
+FMSNBasicClient::willTopicRespHandler(const FMSNMsgWillTopicResp *msg)
 {
 }
 
 void
-FMSNBasicClient::willmsgrespHandler(const FMSNMsgWillmsgresp *msg)
+FMSNBasicClient::willMsgRespHandler(const FMSNMsgWillMsgResp *msg)
 {
 }
 
 void
-FMSNBasicClient::searchgw(const uint8_t radius)
+FMSNBasicClient::searchGw(const uint8_t radius)
 {
-  FMSNMsgSearchgw *msg = reinterpret_cast<FMSNMsgSearchgw *>(mMessageBuffer);
+  FMSNMsgSearchGw *msg = reinterpret_cast<FMSNMsgSearchGw *>(mMessageBuffer);
 
-  msg->length = sizeof(FMSNMsgSearchgw);
+  msg->length = sizeof(FMSNMsgSearchGw);
   msg->type   = FMSNMT_SEARCHGW;
   msg->radius = radius;
 
@@ -503,7 +503,7 @@ FMSNBasicClient::connect()
 }
 
 void
-FMSNBasicClient::willtopic(const char *willTopic, const bool update)
+FMSNBasicClient::willTopic(const char *willTopic, const bool update)
 {
   if(willTopic == NULL)
   {
@@ -514,13 +514,13 @@ FMSNBasicClient::willtopic(const char *willTopic, const bool update)
   }
   else
   {
-    FMSNMsgWilltopic *msg =
-      reinterpret_cast<FMSNMsgWilltopic *>(mMessageBuffer);
+    FMSNMsgWillTopic *msg =
+      reinterpret_cast<FMSNMsgWillTopic *>(mMessageBuffer);
 
     msg->type  = update ? FMSNMT_WILLTOPICUPD : FMSNMT_WILLTOPIC;
     msg->flags = mFlags;
     fmsnSafeCopyText(msg->willTopic, willTopic,
-                     FMSN_GET_MAX_DATA_SIZE(FMSNMsgWilltopic));
+                     FMSN_GET_MAX_DATA_SIZE(FMSNMsgWillTopic));
   }
 
   sendMessage();
@@ -532,12 +532,12 @@ FMSNBasicClient::willtopic(const char *willTopic, const bool update)
 }
 
 void
-FMSNBasicClient::willmsg(const void *willMsg, const uint8_t willMsgLen,
+FMSNBasicClient::willMsg(const void *willMsg, const uint8_t willMsgLen,
                          const bool update)
 {
-  FMSNMsgWillmsg *msg = reinterpret_cast<FMSNMsgWillmsg *>(mMessageBuffer);
+  FMSNMsgWillMsg *msg = reinterpret_cast<FMSNMsgWillMsg *>(mMessageBuffer);
 
-  msg->length = sizeof(FMSNMsgWillmsg) + willMsgLen;
+  msg->length = sizeof(FMSNMsgWillMsg) + willMsgLen;
   msg->type   = update ? FMSNMT_WILLMSGUPD : FMSNMT_WILLMSG;
   memcpy(msg->willmsg, willMsg, willMsgLen);
 
@@ -600,12 +600,12 @@ FMSNBasicClient::registerTopic(const char *name)
 }
 
 void
-FMSNBasicClient::regack(const uint16_t topicId, const uint16_t messageId,
+FMSNBasicClient::regAck(const uint16_t topicId, const uint16_t messageId,
                         const FMSNReturnCode returnCode)
 {
-  FMSNMsgRegack *msg = reinterpret_cast<FMSNMsgRegack *>(mMessageBuffer);
+  FMSNMsgRegAck *msg = reinterpret_cast<FMSNMsgRegAck *>(mMessageBuffer);
 
-  msg->length     = sizeof(FMSNMsgRegack);
+  msg->length     = sizeof(FMSNMsgRegAck);
   msg->type       = fmsnGetRespondType(FMSNMT_REGISTER);
   msg->topicId    = bswap(topicId);
   msg->messageId  = bswap(messageId);
@@ -677,12 +677,12 @@ MQTTSN::pubcomp()
 #endif
 
 void
-FMSNBasicClient::puback(const uint16_t topicId, const uint16_t messageId,
+FMSNBasicClient::pubAck(const uint16_t topicId, const uint16_t messageId,
                         const FMSNReturnCode returnCode)
 {
-  FMSNMsgPuback *msg = reinterpret_cast<FMSNMsgPuback *>(mMessageBuffer);
+  FMSNMsgPubAck *msg = reinterpret_cast<FMSNMsgPubAck *>(mMessageBuffer);
 
-  msg->length     = sizeof(FMSNMsgPuback);
+  msg->length     = sizeof(FMSNMsgPubAck);
   msg->type       = fmsnGetRespondType(FMSNMT_PUBLISH);
   msg->topicId    = bswap(topicId);
   msg->messageId  = bswap(messageId);
@@ -784,14 +784,14 @@ FMSNBasicClient::unsubscribeById(const uint16_t topicId)
 }
 
 void
-FMSNBasicClient::pingreq(const char *clientId)
+FMSNBasicClient::pingReq(const char *clientId)
 {
-  FMSNMsgPingreq *msg = reinterpret_cast<FMSNMsgPingreq *>(mMessageBuffer);
+  FMSNMsgPingReq *msg = reinterpret_cast<FMSNMsgPingReq *>(mMessageBuffer);
 
-  msg->length = sizeof(FMSNMsgPingreq) + strlen(clientId);
+  msg->length = sizeof(FMSNMsgPingReq) + strlen(clientId);
   msg->type   = FMSNMT_PINGREQ;
   fmsnSafeCopyText(msg->clientId, clientId,
-                   FMSN_GET_MAX_DATA_SIZE(FMSNMsgPingreq));
+                   FMSN_GET_MAX_DATA_SIZE(FMSNMsgPingReq));
 
   sendMessage();
 
@@ -799,7 +799,7 @@ FMSNBasicClient::pingreq(const char *clientId)
 }
 
 void
-FMSNBasicClient::pingresp()
+FMSNBasicClient::pingResp()
 {
   FMSNMsgHeader *msg = reinterpret_cast<FMSNMsgHeader *>(mMessageBuffer);
 

@@ -54,13 +54,13 @@ public:
   parseStream();
 
   void
-  searchgw(const uint8_t radius);
+  searchGw(const uint8_t radius);
   void
   connect();
   void
-  willtopic(const char *willTopic, const bool update=false);
+  willTopic(const char *willTopic, const bool update=false);
   void
-  willmsg(const void *willMsg, const uint8_t willMsgLen,
+  willMsg(const void *willMsg, const uint8_t willMsgLen,
           const bool update=false);
   bool
   registerTopic(const char *name);
@@ -83,9 +83,9 @@ public:
   void
   unsubscribeById(const uint16_t topicId);
   void
-  pingreq(const char *clientId);
+  pingReq(const char *clientId);
   void
-  pingresp();
+  pingResp();
   void
   disconnect(const uint16_t duration);
 
@@ -111,21 +111,21 @@ protected:
   virtual void
   advertiseHandler(const FMSNMsgAdvertise *msg);
   virtual void
-  gwinfoHandler(const FMSNMsgGwinfo *msg);
+  gwInfoHandler(const FMSNMsgGwInfo *msg);
   virtual void
-  connackHandler(const FMSNMsgConnack *msg);
+  connAckHandler(const FMSNMsgConnAck *msg);
   virtual void
-  willtopicreqHandler(const FMSNMsgHeader *msg);
+  willTopicReqHandler(const FMSNMsgHeader *msg);
   virtual void
-  willmsgreqHandler(const FMSNMsgHeader *msg);
+  willMsgReqHandler(const FMSNMsgHeader *msg);
   virtual void
-  regackHandler(const FMSNMsgRegack *msg);
+  regAckHandler(const FMSNMsgRegAck *msg);
   virtual void
   publishHandler(const FMSNMsgPublish *msg);
   virtual void
   registerHandler(const FMSNMsgRegister *msg);
   virtual void
-  pubackHandler(const FMSNMsgPuback *msg);
+  pubAckHandler(const FMSNMsgPubAck *msg);
 
 #ifdef USE_QOS2
   virtual void
@@ -137,25 +137,25 @@ protected:
 
 #endif
   virtual void
-  subackHandler(const FMSNMsgSuback *msg);
+  subAckHandler(const FMSNMsgSubAck *msg);
   virtual void
-  unsubackHandler(const FMSNMsgUnsuback *msg);
+  unsubAckHandler(const FMSNMsgUnsubAck *msg);
   virtual void
-  pingreqHandler(const FMSNMsgPingreq *msg);
+  pingReqHandler(const FMSNMsgPingReq *msg);
   virtual void
-  pingrespHandler();
+  pingRespHandler();
   virtual void
   disconnectHandler(const FMSNMsgDisconnect *msg);
   virtual void
-  willtopicrespHandler(const FMSNMsgWilltopicresp *msg);
+  willTopicRespHandler(const FMSNMsgWillTopicResp *msg);
   virtual void
-  willmsgrespHandler(const FMSNMsgWillmsgresp *msg);
+  willMsgRespHandler(const FMSNMsgWillMsgResp *msg);
 
   void
-  regack(const uint16_t topicId, const uint16_t messageId,
+  regAck(const uint16_t topicId, const uint16_t messageId,
          const FMSNReturnCode returnCode);
   void
-  puback(const uint16_t topicId, const uint16_t messageId,
+  pubAck(const uint16_t topicId, const uint16_t messageId,
          const FMSNReturnCode returnCode);
 
   void

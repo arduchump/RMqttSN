@@ -1,4 +1,4 @@
-/*
+﻿/*
    The MIT License (MIT)
 
    Copyright (C) 2014 John Donovan
@@ -115,13 +115,13 @@ public FMSNMsgHeader
   uint16_t duration;
 };
 
-struct __attribute__ ((__packed__)) FMSNMsgSearchgw:
+struct __attribute__ ((__packed__)) FMSNMsgSearchGw:
 public FMSNMsgHeader
 {
   uint8_t radius;
 };
 
-struct __attribute__ ((__packed__)) FMSNMsgGwinfo:
+struct __attribute__ ((__packed__)) FMSNMsgGwInfo:
 public FMSNMsgHeader
 {
   uint8_t gwId;
@@ -139,13 +139,13 @@ public FMSNMsgHeader
   char     clientId[0];
 };
 
-struct __attribute__ ((__packed__)) FMSNMsgConnack:
+struct __attribute__ ((__packed__)) FMSNMsgConnAck:
 public FMSNMsgHeader
 {
   FMSNReturnCode returnCode;
 };
 
-struct __attribute__ ((__packed__)) FMSNMsgWilltopic:
+struct __attribute__ ((__packed__)) FMSNMsgWillTopic:
 public FMSNMsgHeader
 {
   uint8_t flags;
@@ -153,7 +153,7 @@ public FMSNMsgHeader
   char willTopic[0];
 };
 
-struct __attribute__ ((__packed__)) FMSNMsgWillmsg:
+struct __attribute__ ((__packed__)) FMSNMsgWillMsg:
 public FMSNMsgHeader
 {
   char willmsg[0];
@@ -168,7 +168,7 @@ public FMSNMsgHeader
   char     topicName[0];
 };
 
-struct __attribute__ ((__packed__)) FMSNMsgRegack:
+struct __attribute__ ((__packed__)) FMSNMsgRegAck:
 public FMSNMsgHeader
 {
   uint16_t topicId;
@@ -187,7 +187,7 @@ public FMSNMsgHeader
   char     data[0];
 };
 
-struct __attribute__ ((__packed__)) FMSNMsgPuback:
+struct __attribute__ ((__packed__)) FMSNMsgPubAck:
 public FMSNMsgHeader
 {
   uint16_t topicId;
@@ -196,7 +196,7 @@ public FMSNMsgHeader
   FMSNReturnCode returnCode;
 };
 
-struct __attribute__ ((__packed__)) FMSNMsgPubqos2:
+struct __attribute__ ((__packed__)) FMSNMsgPubQos2:
 public FMSNMsgHeader
 {
   uint16_t messageId;
@@ -216,7 +216,7 @@ public FMSNMsgHeader
   };
 };
 
-struct __attribute__ ((__packed__)) FMSNMsgSuback:
+struct __attribute__ ((__packed__)) FMSNMsgSubAck:
 public FMSNMsgHeader
 {
   uint8_t flags;
@@ -241,13 +241,13 @@ public FMSNMsgHeader
   };
 };
 
-struct __attribute__ ((__packed__)) FMSNMsgUnsuback:
+struct __attribute__ ((__packed__)) FMSNMsgUnsubAck:
 public FMSNMsgHeader
 {
   uint16_t messageId;
 };
 
-struct __attribute__ ((__packed__)) FMSNMsgPingreq:
+struct __attribute__ ((__packed__)) FMSNMsgPingReq:
 public FMSNMsgHeader
 {
   char clientId[0];
@@ -259,13 +259,13 @@ public FMSNMsgHeader
   uint16_t duration;
 };
 
-struct __attribute__ ((__packed__)) FMSNMsgWilltopicresp:
+struct __attribute__ ((__packed__)) FMSNMsgWillTopicResp:
 public FMSNMsgHeader
 {
   FMSNReturnCode returnCode;
 };
 
-struct __attribute__ ((__packed__)) FMSNMsgWillmsgresp:
+struct __attribute__ ((__packed__)) FMSNMsgWillMsgResp:
 public FMSNMsgHeader
 {
   FMSNReturnCode returnCode;
