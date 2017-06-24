@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <FlyMqttSN.h>
 
-class MqttClient : virtual public FMSNClient
+class MqttClient : public FMSNClient
 {
 public:
   MqttClient(Stream *stream) : FMSNClient(stream)
