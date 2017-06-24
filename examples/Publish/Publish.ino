@@ -1,20 +1,18 @@
 #include <Arduino.h>
 #include <FlyMqttSN.h>
 
-class MqttClient: virtual public FlyMqttSNClient
+class MqttClient : virtual public FMSNClient
 {
 public:
-  MqttClient(Stream *stream): FlyMqttSNClient(stream)
-  {}
-
+  MqttClient(Stream *stream) : FMSNClient(stream)
+  {
+  }
 
 protected:
   virtual void
   pubackHandler(const FMSNMsgPuback *msg);
-
   virtual void
   connackHandler(const FMSNMsgConnack *msg);
-
   virtual void
   regackHandler(const FMSNMsgRegack *msg);
 
@@ -22,10 +20,9 @@ protected:
 };
 
 static MqttClient
-sMqttClient(&Serial3);
-
+  sMqttClient(&Serial3);
 static volatile int
-sProgress = 0;
+  sProgress = 0;
 
 void
 setup()
@@ -51,6 +48,7 @@ void
 loop()
 {
   sMqttClient.parseStream();
+
   if(sMqttClient.waitForResponse())
   {
     return;
@@ -65,7 +63,7 @@ loop()
     sMqttClient.setQos(FMSN_FLAG_QOS_1);
     sMqttClient.setClientId("Shit007");
     sMqttClient.connect();
-    ++ sProgress;
+    ++sProgress;
   }
   else if(1 == sProgress)
   {
@@ -82,7 +80,7 @@ loop()
     // to.
     sMqttClient.registerTopic("arse");
 
-    ++ sProgress;
+    ++sProgress;
   }
   else if(3 == sProgress)
   {
@@ -91,12 +89,13 @@ loop()
   }
   else if(4 == sProgress)
   {
-    uint8_t index = 0;
+    uint8_t  index   = 0;
     uint16_t topicId = 0xffff;
 
     Serial.println(F("Try to publish topic : arse"));
 
     topicId = sMqttClient.findTopicId("arse", index);
+
     if(0xffff == topicId)
     {
       Serial.println(F("Failed to register topic : arse"));
@@ -110,7 +109,7 @@ loop()
 
       sMqttClient.publish(topicId, info, static_cast<uint8_t>(strlen(info)));
 
-      ++ sProgress;
+      ++sProgress;
     }
   }
   else if(5 == sProgress)
@@ -129,26 +128,29 @@ loop()
   }
 }
 
-void MqttClient::pubackHandler(const FMSNMsgPuback *msg)
+void
+MqttClient::pubackHandler(const FMSNMsgPuback *msg)
 {
-  FlyMqttSNClient::pubackHandler(msg);
+  FMSNClient::pubackHandler(msg);
 
   Serial.println(F("Published!"));
-  ++ sProgress;
+  ++sProgress;
 }
 
-void MqttClient::connackHandler(const FMSNMsgConnack *msg)
+void
+MqttClient::connackHandler(const FMSNMsgConnack *msg)
 {
-  FlyMqttSNClient::connackHandler(msg);
+  FMSNClient::connackHandler(msg);
 
   Serial.println(F("Connected!"));
-  ++ sProgress;
+  ++sProgress;
 }
 
-void MqttClient::regackHandler(const FMSNMsgRegack *msg)
+void
+MqttClient::regackHandler(const FMSNMsgRegack *msg)
 {
-  FlyMqttSNClient::regackHandler(msg);
+  FMSNClient::regackHandler(msg);
 
   Serial.println(F("Registerred!"));
-  ++ sProgress;
+  ++sProgress;
 }

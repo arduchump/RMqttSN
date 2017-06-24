@@ -26,19 +26,19 @@
 #ifndef __INCLUDED_E457D8FE526A11E7AA6EA088B4D1658C
 #define __INCLUDED_E457D8FE526A11E7AA6EA088B4D1658C
 
-#include "FlyMqttSNTypes.h"
+#include "FMSNTypes.h"
 
 #define FMSN_MAX_TOPICS      10
 #define FMSN_MAX_BUFFER_SIZE 66
 #define FMSN_GET_MAX_DATA_SIZE(headerClass) \
   ((size_t)(FMSN_MAX_BUFFER_SIZE - sizeof(headerClass)))
 
-class FlyMqttSNClient
+class FMSNClient
 {
 public:
-  FlyMqttSNClient(Stream *stream);
+  FMSNClient(Stream *stream);
   virtual
-  ~FlyMqttSNClient();
+  ~FMSNClient();
 
   void
   setQos(uint8_t qos);

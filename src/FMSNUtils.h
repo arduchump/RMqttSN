@@ -1,7 +1,7 @@
 #ifndef __INCLUDED_895A8BE057E211E7AA6EA088B4D1658C
 #define __INCLUDED_895A8BE057E211E7AA6EA088B4D1658C
 
-#include "FlyMqttSNTypes.h"
+#include "FMSNTypes.h"
 
 #define fmsnSafeCopyText(dest, src, size) \
   do \

@@ -25,10 +25,10 @@
 
 #include <Arduino.h>
 
-#include "FlyMqttSNClient.h"
-#include "FlyMqttSNUtils.h"
+#include "FMSNClient.h"
+#include "FMSNUtils.h"
 
-FlyMqttSNClient::FlyMqttSNClient(Stream *stream) :
+FMSNClient::FMSNClient(Stream *stream) :
   mResponseToWaitFor(FMSNMT_INVALID),
   mMessageId(0),
   mTopicCount(0),
@@ -44,24 +44,24 @@ FlyMqttSNClient::FlyMqttSNClient(Stream *stream) :
   memset(mResponseBuffer, 0, FMSN_MAX_BUFFER_SIZE);
 }
 
-FlyMqttSNClient::~FlyMqttSNClient()
+FMSNClient::~FMSNClient()
 {
 }
 
 void
-FlyMqttSNClient::setQos(uint8_t qos)
+FMSNClient::setQos(uint8_t qos)
 {
   mFlags |= (qos & FMSN_QOS_MASK);
 }
 
 uint8_t
-FlyMqttSNClient::qos()
+FMSNClient::qos()
 {
   return mFlags & FMSN_QOS_MASK;
 }
 
 bool
-FlyMqttSNClient::waitForResponse()
+FMSNClient::waitForResponse()
 {
   if(mResponseToWaitFor != FMSNMT_INVALID)
   {
@@ -88,13 +88,13 @@ FlyMqttSNClient::waitForResponse()
 }
 
 uint16_t
-FlyMqttSNClient::bswap(const uint16_t val)
+FMSNClient::bswap(const uint16_t val)
 {
   return (val << 8) | (val >> 8);
 }
 
 uint16_t
-FlyMqttSNClient::findTopicId(const char *name, uint8_t&index)
+FMSNClient::findTopicId(const char *name, uint8_t&index)
 {
   for(uint8_t i = 0; i < mTopicCount; ++i)
   {
@@ -109,7 +109,7 @@ FlyMqttSNClient::findTopicId(const char *name, uint8_t&index)
 }
 
 void
-FlyMqttSNClient::parseStream()
+FMSNClient::parseStream()
 {
   if(mStream->available() > 0)
   {
@@ -132,7 +132,7 @@ FlyMqttSNClient::parseStream()
 }
 
 void
-FlyMqttSNClient::dispatch()
+FMSNClient::dispatch()
 {
   FMSNMsgHeader *responseMessage = (FMSNMsgHeader *)mResponseBuffer;
   bool           handled         = true;
@@ -295,7 +295,7 @@ FlyMqttSNClient::dispatch()
 }
 
 void
-FlyMqttSNClient::sendMessage()
+FMSNClient::sendMessage()
 {
   FMSNMsgHeader *hdr = reinterpret_cast<FMSNMsgHeader *>(mMessageBuffer);
 
@@ -313,63 +313,63 @@ FlyMqttSNClient::sendMessage()
 }
 
 String
-FlyMqttSNClient::clientId() const
+FMSNClient::clientId() const
 {
   return mClientId;
 }
 
 void
-FlyMqttSNClient::setClientId(const String &clientId)
+FMSNClient::setClientId(const String &clientId)
 {
   mClientId = clientId;
 }
 
 uint16_t
-FlyMqttSNClient::keepAliveInterval() const
+FMSNClient::keepAliveInterval() const
 {
   return mKeepAliveInterval;
 }
 
 void
-FlyMqttSNClient::setKeepAliveInterval(const uint16_t &keepAliveInterval)
+FMSNClient::setKeepAliveInterval(const uint16_t &keepAliveInterval)
 {
   mKeepAliveInterval = keepAliveInterval;
 }
 
 void
-FlyMqttSNClient::timeout()
+FMSNClient::timeout()
 {
   mResponseToWaitFor = FMSNMT_INVALID;
 }
 
 void
-FlyMqttSNClient::advertiseHandler(const FMSNMsgAdvertise *msg)
+FMSNClient::advertiseHandler(const FMSNMsgAdvertise *msg)
 {
   mGatewayId = msg->gwId;
 }
 
 void
-FlyMqttSNClient::gwinfoHandler(const FMSNMsgGwinfo *msg)
+FMSNClient::gwinfoHandler(const FMSNMsgGwinfo *msg)
 {
 }
 
 void
-FlyMqttSNClient::connackHandler(const FMSNMsgConnack *msg)
+FMSNClient::connackHandler(const FMSNMsgConnack *msg)
 {
 }
 
 void
-FlyMqttSNClient::willtopicreqHandler(const FMSNMsgHeader *msg)
+FMSNClient::willtopicreqHandler(const FMSNMsgHeader *msg)
 {
 }
 
 void
-FlyMqttSNClient::willmsgreqHandler(const FMSNMsgHeader *msg)
+FMSNClient::willmsgreqHandler(const FMSNMsgHeader *msg)
 {
 }
 
 void
-FlyMqttSNClient::regackHandler(const FMSNMsgRegack *msg)
+FMSNClient::regackHandler(const FMSNMsgRegack *msg)
 {
   if(msg->returnCode == 0 && mTopicCount < FMSN_MAX_TOPICS &&
      bswap(msg->messageId) == mMessageId)
@@ -395,7 +395,7 @@ FlyMqttSNClient::regackHandler(const FMSNMsgRegack *msg)
 }
 
 void
-FlyMqttSNClient::pubackHandler(const FMSNMsgPuback *msg)
+FMSNClient::pubackHandler(const FMSNMsgPuback *msg)
 {
 }
 
@@ -418,33 +418,33 @@ MQTTSN::pubcompHandler(const msg_pubqos2 *msg)
 #endif
 
 void
-FlyMqttSNClient::pingreqHandler(const FMSNMsgPingreq *msg)
+FMSNClient::pingreqHandler(const FMSNMsgPingreq *msg)
 {
   pingresp();
 }
 
 void
-FlyMqttSNClient::subackHandler(const FMSNMsgSuback *msg)
+FMSNClient::subackHandler(const FMSNMsgSuback *msg)
 {
 }
 
 void
-FlyMqttSNClient::unsubackHandler(const FMSNMsgUnsuback *msg)
+FMSNClient::unsubackHandler(const FMSNMsgUnsuback *msg)
 {
 }
 
 void
-FlyMqttSNClient::disconnectHandler(const FMSNMsgDisconnect *msg)
+FMSNClient::disconnectHandler(const FMSNMsgDisconnect *msg)
 {
 }
 
 void
-FlyMqttSNClient::pingrespHandler()
+FMSNClient::pingrespHandler()
 {
 }
 
 void
-FlyMqttSNClient::publishHandler(const FMSNMsgPublish *msg)
+FMSNClient::publishHandler(const FMSNMsgPublish *msg)
 {
   if(msg->flags & FMSN_FLAG_QOS_1)
   {
@@ -465,7 +465,7 @@ FlyMqttSNClient::publishHandler(const FMSNMsgPublish *msg)
 }
 
 void
-FlyMqttSNClient::registerHandler(const FMSNMsgRegister *msg)
+FMSNClient::registerHandler(const FMSNMsgRegister *msg)
 {
   FMSNReturnCode ret = FMSNRC_REJECTED_INVALID_TOPIC_ID;
   uint8_t        index;
@@ -482,17 +482,17 @@ FlyMqttSNClient::registerHandler(const FMSNMsgRegister *msg)
 }
 
 void
-FlyMqttSNClient::willtopicrespHandler(const FMSNMsgWilltopicresp *msg)
+FMSNClient::willtopicrespHandler(const FMSNMsgWilltopicresp *msg)
 {
 }
 
 void
-FlyMqttSNClient::willmsgrespHandler(const FMSNMsgWillmsgresp *msg)
+FMSNClient::willmsgrespHandler(const FMSNMsgWillmsgresp *msg)
 {
 }
 
 void
-FlyMqttSNClient::searchgw(const uint8_t radius)
+FMSNClient::searchgw(const uint8_t radius)
 {
   FMSNMsgSearchgw *msg = reinterpret_cast<FMSNMsgSearchgw *>(mMessageBuffer);
 
@@ -505,7 +505,7 @@ FlyMqttSNClient::searchgw(const uint8_t radius)
 }
 
 void
-FlyMqttSNClient::connect()
+FMSNClient::connect()
 {
   FMSNMsgConnect *msg = reinterpret_cast<FMSNMsgConnect *>(mMessageBuffer);
 
@@ -524,7 +524,7 @@ FlyMqttSNClient::connect()
 }
 
 void
-FlyMqttSNClient::willtopic(const char *willTopic, const bool update)
+FMSNClient::willtopic(const char *willTopic, const bool update)
 {
   if(willTopic == NULL)
   {
@@ -553,7 +553,7 @@ FlyMqttSNClient::willtopic(const char *willTopic, const bool update)
 }
 
 void
-FlyMqttSNClient::willmsg(const void *willMsg, const uint8_t willMsgLen,
+FMSNClient::willmsg(const void *willMsg, const uint8_t willMsgLen,
                          const bool update)
 {
   FMSNMsgWillmsg *msg = reinterpret_cast<FMSNMsgWillmsg *>(mMessageBuffer);
@@ -566,7 +566,7 @@ FlyMqttSNClient::willmsg(const void *willMsg, const uint8_t willMsgLen,
 }
 
 void
-FlyMqttSNClient::disconnect(const uint16_t duration)
+FMSNClient::disconnect(const uint16_t duration)
 {
   FMSNMsgDisconnect *msg =
     reinterpret_cast<FMSNMsgDisconnect *>(mMessageBuffer);
@@ -585,7 +585,7 @@ FlyMqttSNClient::disconnect(const uint16_t duration)
 }
 
 bool
-FlyMqttSNClient::registerTopic(const char *name)
+FMSNClient::registerTopic(const char *name)
 {
   if((FMSNMT_INVALID == mResponseToWaitFor) &&
      mTopicCount < (FMSN_MAX_TOPICS - 1))
@@ -616,7 +616,7 @@ FlyMqttSNClient::registerTopic(const char *name)
 }
 
 void
-FlyMqttSNClient::regack(const uint16_t topicId, const uint16_t messageId,
+FMSNClient::regack(const uint16_t topicId, const uint16_t messageId,
                         const FMSNReturnCode returnCode)
 {
   FMSNMsgRegack *msg = reinterpret_cast<FMSNMsgRegack *>(mMessageBuffer);
@@ -631,7 +631,7 @@ FlyMqttSNClient::regack(const uint16_t topicId, const uint16_t messageId,
 }
 
 void
-FlyMqttSNClient::publish(const uint16_t topicId, const void *data,
+FMSNClient::publish(const uint16_t topicId, const void *data,
                          const uint8_t dataLen)
 {
   ++mMessageId;
@@ -693,7 +693,7 @@ MQTTSN::pubcomp()
 #endif
 
 void
-FlyMqttSNClient::puback(const uint16_t topicId, const uint16_t messageId,
+FMSNClient::puback(const uint16_t topicId, const uint16_t messageId,
                         const FMSNReturnCode returnCode)
 {
   FMSNMsgPuback *msg = reinterpret_cast<FMSNMsgPuback *>(mMessageBuffer);
@@ -708,7 +708,7 @@ FlyMqttSNClient::puback(const uint16_t topicId, const uint16_t messageId,
 }
 
 void
-FlyMqttSNClient::subscribeByName(const char *topicName)
+FMSNClient::subscribeByName(const char *topicName)
 {
   ++mMessageId;
 
@@ -732,7 +732,7 @@ FlyMqttSNClient::subscribeByName(const char *topicName)
 }
 
 void
-FlyMqttSNClient::subscribeById(const uint16_t topicId)
+FMSNClient::subscribeById(const uint16_t topicId)
 {
   ++mMessageId;
 
@@ -753,7 +753,7 @@ FlyMqttSNClient::subscribeById(const uint16_t topicId)
 }
 
 void
-FlyMqttSNClient::unsubscribeByName(const char *topicName)
+FMSNClient::unsubscribeByName(const char *topicName)
 {
   ++mMessageId;
 
@@ -778,7 +778,7 @@ FlyMqttSNClient::unsubscribeByName(const char *topicName)
 }
 
 void
-FlyMqttSNClient::unsubscribeById(const uint16_t topicId)
+FMSNClient::unsubscribeById(const uint16_t topicId)
 {
   ++mMessageId;
 
@@ -800,7 +800,7 @@ FlyMqttSNClient::unsubscribeById(const uint16_t topicId)
 }
 
 void
-FlyMqttSNClient::pingreq(const char *clientId)
+FMSNClient::pingreq(const char *clientId)
 {
   FMSNMsgPingreq *msg = reinterpret_cast<FMSNMsgPingreq *>(mMessageBuffer);
 
@@ -815,7 +815,7 @@ FlyMqttSNClient::pingreq(const char *clientId)
 }
 
 void
-FlyMqttSNClient::pingresp()
+FMSNClient::pingresp()
 {
   FMSNMsgHeader *msg = reinterpret_cast<FMSNMsgHeader *>(mMessageBuffer);
 
