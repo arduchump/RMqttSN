@@ -94,13 +94,17 @@ FMSNClient::bswap(const uint16_t val)
 }
 
 uint16_t
-FMSNClient::findTopicId(const char *name, uint8_t&index)
+FMSNClient::findTopicId(const char *name, const uint16_t &defaultId)
 {
   for(uint8_t i = 0; i < mTopicCount; ++i)
   {
     if(strcmp(mTopicTable[i].name, name) == 0)
     {
-      index = i;
+      if(defaultId != FMSN_INVALID_TOPIC_ID)
+      {
+        mTopicTable[i].id = defaultId;
+      }
+
       return mTopicTable[i].id;
     }
   }
@@ -467,14 +471,13 @@ FMSNClient::publishHandler(const FMSNMsgPublish *msg)
 void
 FMSNClient::registerHandler(const FMSNMsgRegister *msg)
 {
-  FMSNReturnCode ret = FMSNRC_REJECTED_INVALID_TOPIC_ID;
-  uint8_t        index;
+  FMSNReturnCode ret     = FMSNRC_REJECTED_INVALID_TOPIC_ID;
+  uint16_t       topicId = bswap(msg->topicId);
 
-  findTopicId(msg->topicName, index);
+  topicId = findTopicId(msg->topicName, topicId);
 
-  if(index != FMSN_INVALID_TOPIC_ID)
+  if(topicId != FMSN_INVALID_TOPIC_ID)
   {
-    mTopicTable[index].id = bswap(msg->topicId);
     ret = FMSNRC_ACCEPTED;
   }
 

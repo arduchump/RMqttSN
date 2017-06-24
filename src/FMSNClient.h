@@ -47,7 +47,8 @@ public:
   qos();
 
   uint16_t
-  findTopicId(const char *name, uint8_t&index);
+  findTopicId(const char *name,
+              const uint16_t &defaultId=FMSN_INVALID_TOPIC_ID);
   bool
   waitForResponse();
 
