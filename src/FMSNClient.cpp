@@ -557,7 +557,7 @@ FMSNClient::willtopic(const char *willTopic, const bool update)
 
 void
 FMSNClient::willmsg(const void *willMsg, const uint8_t willMsgLen,
-                         const bool update)
+                    const bool update)
 {
   FMSNMsgWillmsg *msg = reinterpret_cast<FMSNMsgWillmsg *>(mMessageBuffer);
 
@@ -620,7 +620,7 @@ FMSNClient::registerTopic(const char *name)
 
 void
 FMSNClient::regack(const uint16_t topicId, const uint16_t messageId,
-                        const FMSNReturnCode returnCode)
+                   const FMSNReturnCode returnCode)
 {
   FMSNMsgRegack *msg = reinterpret_cast<FMSNMsgRegack *>(mMessageBuffer);
 
@@ -635,7 +635,7 @@ FMSNClient::regack(const uint16_t topicId, const uint16_t messageId,
 
 void
 FMSNClient::publish(const uint16_t topicId, const void *data,
-                         const uint8_t dataLen)
+                    const uint8_t dataLen)
 {
   ++mMessageId;
 
@@ -697,7 +697,7 @@ MQTTSN::pubcomp()
 
 void
 FMSNClient::puback(const uint16_t topicId, const uint16_t messageId,
-                        const FMSNReturnCode returnCode)
+                   const FMSNReturnCode returnCode)
 {
   FMSNMsgPuback *msg = reinterpret_cast<FMSNMsgPuback *>(mMessageBuffer);
 
