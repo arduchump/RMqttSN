@@ -3,6 +3,13 @@
 
 #include "FlyMqttSNTypes.h"
 
+#define fmsnSafeCopyText(dest, src, size) \
+  do \
+  { \
+    strncpy(dest, src, (size)); \
+    (dest)[(size) - 1] = 0; \
+  } while(0);
+
 ///
 /// Get respond type from a reqeuest type.
 ///
