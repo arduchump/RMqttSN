@@ -33,12 +33,12 @@
 #define FMSN_GET_MAX_DATA_SIZE(headerClass) \
   ((size_t)(FMSN_MAX_BUFFER_SIZE - sizeof(headerClass)))
 
-class FMSNClient
+class FMSNBasicClient
 {
 public:
-  FMSNClient(Stream *stream);
+  FMSNBasicClient(Stream *stream);
   virtual
-  ~FMSNClient();
+  ~FMSNBasicClient();
 
   void
   setQos(uint8_t qos);
@@ -49,8 +49,6 @@ public:
   uint16_t
   findTopicId(const char *name,
               const uint16_t &defaultId=FMSN_INVALID_TOPIC_ID);
-  bool
-  waitForResponse();
 
   void
   parseStream();
@@ -92,6 +90,8 @@ public:
   disconnect(const uint16_t duration);
 
   virtual void
+  startResponseTimer();
+  virtual void
   timeout();
 
   uint16_t
@@ -103,6 +103,9 @@ public:
   clientId() const;
   void
   setClientId(const String &clientId);
+
+  uint8_t
+  responseToWaitFor() const;
 
 protected:
   virtual void
@@ -155,19 +158,19 @@ protected:
   puback(const uint16_t topicId, const uint16_t messageId,
          const FMSNReturnCode returnCode);
 
-private:
-  struct Topic
-  {
-    const char *name;
-    uint16_t    id;
-  };
-
   void
   dispatch();
   uint16_t
   bswap(const uint16_t val);
   void
   sendMessage();
+
+private:
+  struct Topic
+  {
+    const char *name;
+    uint16_t    id;
+  };
 
   /// Set to valid message type when we're waiting for some sort of
   /// acknowledgement from the server that will transition our state.
@@ -181,12 +184,26 @@ private:
   /// Default flags
   uint8_t  mFlags;
   uint16_t mKeepAliveInterval;
-  uint32_t mResponseTimer;
-  uint8_t  mResponseRetries;
 
   /// Target stream we will send to.
   Stream *mStream;
   String  mClientId;
+};
+
+class FMSNClient : public FMSNBasicClient
+{
+public:
+  FMSNClient(Stream *stream);
+
+  bool
+  waitForResponse();
+
+  void
+  startResponseTimer();
+
+private:
+  unsigned long mResponseTimer;
+  uint8_t       mResponseRetries;
 };
 
 #endif // __INCLUDED_E457D8FE526A11E7AA6EA088B4D1658C

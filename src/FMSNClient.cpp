@@ -28,15 +28,13 @@
 #include "FMSNClient.h"
 #include "FMSNUtils.h"
 
-FMSNClient::FMSNClient(Stream *stream) :
+FMSNBasicClient::FMSNBasicClient(Stream *stream) :
   mResponseToWaitFor(FMSNMT_INVALID),
   mMessageId(0),
   mTopicCount(0),
   mGatewayId(0),
   mFlags(FMSN_FLAG_QOS_0),
   mKeepAliveInterval(30),
-  mResponseTimer(0),
-  mResponseRetries(0),
   mStream(stream)
 {
   memset(mTopicTable, 0, sizeof(Topic) * FMSN_MAX_TOPICS);
@@ -44,57 +42,30 @@ FMSNClient::FMSNClient(Stream *stream) :
   memset(mResponseBuffer, 0, FMSN_MAX_BUFFER_SIZE);
 }
 
-FMSNClient::~FMSNClient()
+FMSNBasicClient::~FMSNBasicClient()
 {
 }
 
 void
-FMSNClient::setQos(uint8_t qos)
+FMSNBasicClient::setQos(uint8_t qos)
 {
   mFlags |= (qos & FMSN_QOS_MASK);
 }
 
 uint8_t
-FMSNClient::qos()
+FMSNBasicClient::qos()
 {
   return mFlags & FMSN_QOS_MASK;
 }
 
-bool
-FMSNClient::waitForResponse()
-{
-  if(mResponseToWaitFor != FMSNMT_INVALID)
-  {
-    // TODO: Watch out for overflow.
-    if((millis() - mResponseTimer) > (FMSN_T_RETRY * 1000L))
-    {
-      mResponseTimer = millis();
-
-      if(mResponseRetries == 0)
-      {
-        mResponseToWaitFor = FMSNMT_INVALID;
-        disconnectHandler(NULL);
-      }
-      else
-      {
-        sendMessage();
-      }
-
-      --mResponseRetries;
-    }
-  }
-
-  return mResponseToWaitFor != FMSNMT_INVALID;
-}
-
 uint16_t
-FMSNClient::bswap(const uint16_t val)
+FMSNBasicClient::bswap(const uint16_t val)
 {
   return (val << 8) | (val >> 8);
 }
 
 uint16_t
-FMSNClient::findTopicId(const char *name, const uint16_t &defaultId)
+FMSNBasicClient::findTopicId(const char *name, const uint16_t &defaultId)
 {
   for(uint8_t i = 0; i < mTopicCount; ++i)
   {
@@ -113,7 +84,7 @@ FMSNClient::findTopicId(const char *name, const uint16_t &defaultId)
 }
 
 void
-FMSNClient::parseStream()
+FMSNBasicClient::parseStream()
 {
   if(mStream->available() > 0)
   {
@@ -136,7 +107,7 @@ FMSNClient::parseStream()
 }
 
 void
-FMSNClient::dispatch()
+FMSNBasicClient::dispatch()
 {
   FMSNMsgHeader *responseMessage = (FMSNMsgHeader *)mResponseBuffer;
   bool           handled         = true;
@@ -299,7 +270,7 @@ FMSNClient::dispatch()
 }
 
 void
-FMSNClient::sendMessage()
+FMSNBasicClient::sendMessage()
 {
   FMSNMsgHeader *hdr = reinterpret_cast<FMSNMsgHeader *>(mMessageBuffer);
 
@@ -308,72 +279,77 @@ FMSNClient::sendMessage()
 
   if(FMSNMT_INVALID == mResponseToWaitFor)
   {
-    mResponseTimer   = millis();
-    mResponseRetries = FMSN_N_RETRY;
+    startResponseTimer();
 
     // Cheesy hack to ensure two messages don't run-on into one send.
 //        delay(10);
   }
 }
 
+uint8_t
+FMSNBasicClient::responseToWaitFor() const
+{
+  return mResponseToWaitFor;
+}
+
 String
-FMSNClient::clientId() const
+FMSNBasicClient::clientId() const
 {
   return mClientId;
 }
 
 void
-FMSNClient::setClientId(const String &clientId)
+FMSNBasicClient::setClientId(const String &clientId)
 {
   mClientId = clientId;
 }
 
 uint16_t
-FMSNClient::keepAliveInterval() const
+FMSNBasicClient::keepAliveInterval() const
 {
   return mKeepAliveInterval;
 }
 
 void
-FMSNClient::setKeepAliveInterval(const uint16_t &keepAliveInterval)
+FMSNBasicClient::setKeepAliveInterval(const uint16_t &keepAliveInterval)
 {
   mKeepAliveInterval = keepAliveInterval;
 }
 
 void
-FMSNClient::timeout()
+FMSNBasicClient::timeout()
 {
   mResponseToWaitFor = FMSNMT_INVALID;
 }
 
 void
-FMSNClient::advertiseHandler(const FMSNMsgAdvertise *msg)
+FMSNBasicClient::advertiseHandler(const FMSNMsgAdvertise *msg)
 {
   mGatewayId = msg->gwId;
 }
 
 void
-FMSNClient::gwinfoHandler(const FMSNMsgGwinfo *msg)
+FMSNBasicClient::gwinfoHandler(const FMSNMsgGwinfo *msg)
 {
 }
 
 void
-FMSNClient::connackHandler(const FMSNMsgConnack *msg)
+FMSNBasicClient::connackHandler(const FMSNMsgConnack *msg)
 {
 }
 
 void
-FMSNClient::willtopicreqHandler(const FMSNMsgHeader *msg)
+FMSNBasicClient::willtopicreqHandler(const FMSNMsgHeader *msg)
 {
 }
 
 void
-FMSNClient::willmsgreqHandler(const FMSNMsgHeader *msg)
+FMSNBasicClient::willmsgreqHandler(const FMSNMsgHeader *msg)
 {
 }
 
 void
-FMSNClient::regackHandler(const FMSNMsgRegack *msg)
+FMSNBasicClient::regackHandler(const FMSNMsgRegack *msg)
 {
   if(msg->returnCode == 0 && mTopicCount < FMSN_MAX_TOPICS &&
      bswap(msg->messageId) == mMessageId)
@@ -399,7 +375,7 @@ FMSNClient::regackHandler(const FMSNMsgRegack *msg)
 }
 
 void
-FMSNClient::pubackHandler(const FMSNMsgPuback *msg)
+FMSNBasicClient::pubackHandler(const FMSNMsgPuback *msg)
 {
 }
 
@@ -422,33 +398,33 @@ MQTTSN::pubcompHandler(const msg_pubqos2 *msg)
 #endif
 
 void
-FMSNClient::pingreqHandler(const FMSNMsgPingreq *msg)
+FMSNBasicClient::pingreqHandler(const FMSNMsgPingreq *msg)
 {
   pingresp();
 }
 
 void
-FMSNClient::subackHandler(const FMSNMsgSuback *msg)
+FMSNBasicClient::subackHandler(const FMSNMsgSuback *msg)
 {
 }
 
 void
-FMSNClient::unsubackHandler(const FMSNMsgUnsuback *msg)
+FMSNBasicClient::unsubackHandler(const FMSNMsgUnsuback *msg)
 {
 }
 
 void
-FMSNClient::disconnectHandler(const FMSNMsgDisconnect *msg)
+FMSNBasicClient::disconnectHandler(const FMSNMsgDisconnect *msg)
 {
 }
 
 void
-FMSNClient::pingrespHandler()
+FMSNBasicClient::pingrespHandler()
 {
 }
 
 void
-FMSNClient::publishHandler(const FMSNMsgPublish *msg)
+FMSNBasicClient::publishHandler(const FMSNMsgPublish *msg)
 {
   if(msg->flags & FMSN_FLAG_QOS_1)
   {
@@ -469,7 +445,7 @@ FMSNClient::publishHandler(const FMSNMsgPublish *msg)
 }
 
 void
-FMSNClient::registerHandler(const FMSNMsgRegister *msg)
+FMSNBasicClient::registerHandler(const FMSNMsgRegister *msg)
 {
   FMSNReturnCode ret     = FMSNRC_REJECTED_INVALID_TOPIC_ID;
   uint16_t       topicId = bswap(msg->topicId);
@@ -485,17 +461,17 @@ FMSNClient::registerHandler(const FMSNMsgRegister *msg)
 }
 
 void
-FMSNClient::willtopicrespHandler(const FMSNMsgWilltopicresp *msg)
+FMSNBasicClient::willtopicrespHandler(const FMSNMsgWilltopicresp *msg)
 {
 }
 
 void
-FMSNClient::willmsgrespHandler(const FMSNMsgWillmsgresp *msg)
+FMSNBasicClient::willmsgrespHandler(const FMSNMsgWillmsgresp *msg)
 {
 }
 
 void
-FMSNClient::searchgw(const uint8_t radius)
+FMSNBasicClient::searchgw(const uint8_t radius)
 {
   FMSNMsgSearchgw *msg = reinterpret_cast<FMSNMsgSearchgw *>(mMessageBuffer);
 
@@ -508,7 +484,7 @@ FMSNClient::searchgw(const uint8_t radius)
 }
 
 void
-FMSNClient::connect()
+FMSNBasicClient::connect()
 {
   FMSNMsgConnect *msg = reinterpret_cast<FMSNMsgConnect *>(mMessageBuffer);
 
@@ -527,7 +503,7 @@ FMSNClient::connect()
 }
 
 void
-FMSNClient::willtopic(const char *willTopic, const bool update)
+FMSNBasicClient::willtopic(const char *willTopic, const bool update)
 {
   if(willTopic == NULL)
   {
@@ -556,8 +532,8 @@ FMSNClient::willtopic(const char *willTopic, const bool update)
 }
 
 void
-FMSNClient::willmsg(const void *willMsg, const uint8_t willMsgLen,
-                    const bool update)
+FMSNBasicClient::willmsg(const void *willMsg, const uint8_t willMsgLen,
+                         const bool update)
 {
   FMSNMsgWillmsg *msg = reinterpret_cast<FMSNMsgWillmsg *>(mMessageBuffer);
 
@@ -569,7 +545,7 @@ FMSNClient::willmsg(const void *willMsg, const uint8_t willMsgLen,
 }
 
 void
-FMSNClient::disconnect(const uint16_t duration)
+FMSNBasicClient::disconnect(const uint16_t duration)
 {
   FMSNMsgDisconnect *msg =
     reinterpret_cast<FMSNMsgDisconnect *>(mMessageBuffer);
@@ -587,8 +563,13 @@ FMSNClient::disconnect(const uint16_t duration)
   mResponseToWaitFor = fmsnGetRespondType(msg->type);
 }
 
+void
+FMSNBasicClient::startResponseTimer()
+{
+}
+
 bool
-FMSNClient::registerTopic(const char *name)
+FMSNBasicClient::registerTopic(const char *name)
 {
   if((FMSNMT_INVALID == mResponseToWaitFor) &&
      mTopicCount < (FMSN_MAX_TOPICS - 1))
@@ -619,8 +600,8 @@ FMSNClient::registerTopic(const char *name)
 }
 
 void
-FMSNClient::regack(const uint16_t topicId, const uint16_t messageId,
-                   const FMSNReturnCode returnCode)
+FMSNBasicClient::regack(const uint16_t topicId, const uint16_t messageId,
+                        const FMSNReturnCode returnCode)
 {
   FMSNMsgRegack *msg = reinterpret_cast<FMSNMsgRegack *>(mMessageBuffer);
 
@@ -634,8 +615,8 @@ FMSNClient::regack(const uint16_t topicId, const uint16_t messageId,
 }
 
 void
-FMSNClient::publish(const uint16_t topicId, const void *data,
-                    const uint8_t dataLen)
+FMSNBasicClient::publish(const uint16_t topicId, const void *data,
+                         const uint8_t dataLen)
 {
   ++mMessageId;
 
@@ -696,8 +677,8 @@ MQTTSN::pubcomp()
 #endif
 
 void
-FMSNClient::puback(const uint16_t topicId, const uint16_t messageId,
-                   const FMSNReturnCode returnCode)
+FMSNBasicClient::puback(const uint16_t topicId, const uint16_t messageId,
+                        const FMSNReturnCode returnCode)
 {
   FMSNMsgPuback *msg = reinterpret_cast<FMSNMsgPuback *>(mMessageBuffer);
 
@@ -711,7 +692,7 @@ FMSNClient::puback(const uint16_t topicId, const uint16_t messageId,
 }
 
 void
-FMSNClient::subscribeByName(const char *topicName)
+FMSNBasicClient::subscribeByName(const char *topicName)
 {
   ++mMessageId;
 
@@ -735,7 +716,7 @@ FMSNClient::subscribeByName(const char *topicName)
 }
 
 void
-FMSNClient::subscribeById(const uint16_t topicId)
+FMSNBasicClient::subscribeById(const uint16_t topicId)
 {
   ++mMessageId;
 
@@ -756,7 +737,7 @@ FMSNClient::subscribeById(const uint16_t topicId)
 }
 
 void
-FMSNClient::unsubscribeByName(const char *topicName)
+FMSNBasicClient::unsubscribeByName(const char *topicName)
 {
   ++mMessageId;
 
@@ -781,7 +762,7 @@ FMSNClient::unsubscribeByName(const char *topicName)
 }
 
 void
-FMSNClient::unsubscribeById(const uint16_t topicId)
+FMSNBasicClient::unsubscribeById(const uint16_t topicId)
 {
   ++mMessageId;
 
@@ -803,7 +784,7 @@ FMSNClient::unsubscribeById(const uint16_t topicId)
 }
 
 void
-FMSNClient::pingreq(const char *clientId)
+FMSNBasicClient::pingreq(const char *clientId)
 {
   FMSNMsgPingreq *msg = reinterpret_cast<FMSNMsgPingreq *>(mMessageBuffer);
 
@@ -818,7 +799,7 @@ FMSNClient::pingreq(const char *clientId)
 }
 
 void
-FMSNClient::pingresp()
+FMSNBasicClient::pingresp()
 {
   FMSNMsgHeader *msg = reinterpret_cast<FMSNMsgHeader *>(mMessageBuffer);
 
@@ -826,4 +807,47 @@ FMSNClient::pingresp()
   msg->type   = fmsnGetRespondType(FMSNMT_PINGREQ);
 
   sendMessage();
+}
+
+FMSNClient::FMSNClient(Stream *stream)
+  : FMSNBasicClient(stream)
+  , mResponseTimer(0)
+  , mResponseRetries(0)
+{
+}
+
+bool
+FMSNClient::waitForResponse()
+{
+  if(responseToWaitFor() != FMSNMT_INVALID)
+  {
+    // TODO: Watch out for overflow.
+    if((millis() - mResponseTimer) > (FMSN_T_RETRY * 1000L))
+    {
+      mResponseTimer = millis();
+
+      if(mResponseRetries == 0)
+      {
+        timeout();
+        disconnectHandler(NULL);
+
+        // stop retry timer
+      }
+      else
+      {
+        sendMessage();
+      }
+
+      --mResponseRetries;
+    }
+  }
+
+  return responseToWaitFor() != FMSNMT_INVALID;
+}
+
+void
+FMSNClient::startResponseTimer()
+{
+  mResponseTimer   = millis();
+  mResponseRetries = FMSN_N_RETRY;
 }
