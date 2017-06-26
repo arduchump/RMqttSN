@@ -89,12 +89,11 @@ loop()
   }
   else if(4 == sProgress)
   {
-    uint8_t  index   = 0;
     uint16_t topicId = 0xffff;
 
     Serial.println(F("Try to publish topic : arse"));
 
-    topicId = sMqttClient.findTopicId("arse", index);
+    topicId = sMqttClient.findTopicId("arse");
 
     if(0xffff == topicId)
     {
