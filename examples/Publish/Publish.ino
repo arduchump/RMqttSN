@@ -89,13 +89,11 @@ loop()
   }
   else if(4 == sProgress)
   {
-    uint16_t topicId = 0xffff;
-
     Serial.println(F("Try to publish topic : arse"));
 
-    topicId = sMqttClient.findTopicId("arse");
+    auto topic = sMqttClient.getTopicByName("arse");
 
-    if(0xffff == topicId)
+    if(NULL == topic)
     {
       Serial.println(F("Failed to register topic : arse"));
     }
@@ -103,10 +101,10 @@ loop()
     {
       static const char *info = "Kick your arse!";
 
-      Serial.print(F("Topic Id for \"arse\": "));
-      Serial.println(topicId);
+      Serial.print(F("Topic id for \"arse\": "));
+      Serial.println(topic->id);
 
-      sMqttClient.publish(topicId, info, static_cast<uint8_t>(strlen(info)));
+      sMqttClient.publish(topic->id, info, static_cast<uint8_t>(strlen(info)));
 
       ++sProgress;
     }

@@ -37,7 +37,7 @@ FMSNBasicClient::FMSNBasicClient(Stream *stream) :
   mKeepAliveInterval(30),
   mStream(stream)
 {
-  memset(mTopicTable, 0, sizeof(Topic) * FMSN_MAX_TOPICS);
+  memset(mTopicTable, 0, sizeof(FMSNTopic) * FMSN_MAX_TOPICS);
   memset(mMessageBuffer, 0, FMSN_MAX_BUFFER_SIZE);
   memset(mResponseBuffer, 0, FMSN_MAX_BUFFER_SIZE);
 }
@@ -64,23 +64,53 @@ FMSNBasicClient::bswap(const uint16_t val)
   return (val << 8) | (val >> 8);
 }
 
-uint16_t
-FMSNBasicClient::findTopicId(const char *name, const uint16_t &defaultId)
+void
+FMSNBasicClient::setTopic(const char *name, const uint16_t &id)
+{
+  auto topic = getTopicByName(name);
+
+  if(topic)
+  {
+    const_cast<FMSNTopic *>(topic)->id = id;
+  }
+  else if(mTopicCount <= FMSN_MAX_TOPICS)
+  {
+    mTopicTable[mTopicCount].name = name;
+    mTopicTable[mTopicCount].id   = id;
+    ++mTopicCount;
+  }
+  else
+  {
+    // Reach the maximum topic support.
+  }
+}
+
+const FMSNTopic *
+FMSNBasicClient::getTopicByName(const char *name) const
 {
   for(uint8_t i = 0; i < mTopicCount; ++i)
   {
     if(strcmp(mTopicTable[i].name, name) == 0)
     {
-      if(defaultId != FMSN_INVALID_TOPIC_ID)
-      {
-        mTopicTable[i].id = defaultId;
-      }
-
-      return mTopicTable[i].id;
+      return &mTopicTable[i];
     }
   }
 
-  return FMSN_INVALID_TOPIC_ID;
+  return NULL;
+}
+
+const FMSNTopic *
+FMSNBasicClient::getTopicById(const uint16_t &id) const
+{
+  for(uint8_t i = 0; i < mTopicCount; ++i)
+  {
+    if(id == mTopicTable[i].id)
+    {
+      return &mTopicTable[i];
+    }
+  }
+
+  return NULL;
 }
 
 void
@@ -351,25 +381,17 @@ FMSNBasicClient::willMsgReqHandler(const FMSNMsgHeader *msg)
 void
 FMSNBasicClient::regAckHandler(const FMSNMsgRegAck *msg)
 {
-  if(msg->returnCode == 0 && mTopicCount < FMSN_MAX_TOPICS &&
-     bswap(msg->messageId) == mMessageId)
+  if((msg->returnCode == 0)
+     && (mTopicCount > 0)
+     && (mTopicCount < FMSN_MAX_TOPICS)
+     && bswap(msg->messageId) == mMessageId)
   {
-    const uint16_t topicId    = bswap(msg->topicId);
-    bool           foundTopic = false;
+    const uint16_t topicId = bswap(msg->topicId);
 
-    for(uint8_t i = 0; i < mTopicCount; ++i)
+    if(NULL == getTopicById(topicId))
     {
-      if(mTopicTable[i].id == topicId)
-      {
-        foundTopic = true;
-        break;
-      }
-    }
-
-    if(!foundTopic)
-    {
-      mTopicTable[mTopicCount].id = topicId;
-      ++mTopicCount;
+      // If we don't have that topic id, we reset the last topic id.
+      setTopic(mTopicTable[mTopicCount - 1].name, topicId);
     }
   }
 }
@@ -428,16 +450,11 @@ FMSNBasicClient::publishHandler(const FMSNMsgPublish *msg)
 {
   if(msg->flags & FMSN_FLAG_QOS_1)
   {
-    FMSNReturnCode ret     = FMSNRC_REJECTED_INVALID_TOPIC_ID;
-    const uint16_t topicId = bswap(msg->topicId);
+    FMSNReturnCode ret = FMSNRC_REJECTED_INVALID_TOPIC_ID;
 
-    for(uint8_t i = 0; i < mTopicCount; ++i)
+    if(getTopicById(bswap(msg->topicId)))
     {
-      if(mTopicTable[i].id == topicId)
-      {
-        ret = FMSNRC_ACCEPTED;
-        break;
-      }
+      ret = FMSNRC_ACCEPTED;
     }
 
     pubAck(msg->topicId, msg->messageId, ret);
@@ -450,10 +467,12 @@ FMSNBasicClient::registerHandler(const FMSNMsgRegister *msg)
   FMSNReturnCode ret     = FMSNRC_REJECTED_INVALID_TOPIC_ID;
   uint16_t       topicId = bswap(msg->topicId);
 
-  topicId = findTopicId(msg->topicName, topicId);
+  auto topic = getTopicByName(msg->topicName);
 
-  if(topicId != FMSN_INVALID_TOPIC_ID)
+  if(topic)
   {
+    setTopic(msg->topicName, topicId);
+
     ret = FMSNRC_ACCEPTED;
   }
 
@@ -571,16 +590,15 @@ FMSNBasicClient::startResponseTimer()
 bool
 FMSNBasicClient::registerTopic(const char *name)
 {
-  if((FMSNMT_INVALID == mResponseToWaitFor) &&
-     mTopicCount < (FMSN_MAX_TOPICS - 1))
+  if((FMSNMT_INVALID == mResponseToWaitFor)
+     && (mTopicCount < FMSN_MAX_TOPICS))
   {
     ++mMessageId;
 
     // Fill in the next table entry, but we only increment the counter to
     // the next topic when we get a REGACK from the broker. So don't issue
     // another REGISTER until we have resolved this one.
-    mTopicTable[mTopicCount].name = name;
-    mTopicTable[mTopicCount].id   = 0;
+    setTopic(name, 0);
 
     FMSNMsgRegister *msg = reinterpret_cast<FMSNMsgRegister *>(mMessageBuffer);
 

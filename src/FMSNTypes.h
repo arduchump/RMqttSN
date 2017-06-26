@@ -303,4 +303,13 @@ struct FMSNMsgWillMsgResp :  public FMSNMsgHeader
   FMSNReturnCode returnCode;
 } FMSN_STRUCT_PACKED;
 
+/**
+ * @brief The FMSNTopic struct
+ */
+struct FMSNTopic
+{
+  const char *name;
+  uint16_t    id;
+};
+
 #endif // __INCLUDED_FDCE12F8526A11E7AA6EA088B4D1658C

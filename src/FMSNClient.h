@@ -37,6 +37,7 @@ class FMSNBasicClient
 {
 public:
   FMSNBasicClient(Stream *stream);
+
   virtual
   ~FMSNBasicClient();
 
@@ -46,9 +47,13 @@ public:
   uint8_t
   qos();
 
-  uint16_t
-  findTopicId(const char *name,
-              const uint16_t &defaultId=FMSN_INVALID_TOPIC_ID);
+  const FMSNTopic *
+  getTopicByName(const char *name) const;
+  const FMSNTopic *
+  getTopicById(const uint16_t &id) const;
+
+  void
+  setTopic(const char *name, const uint16_t &id);
 
   void
   parseStream();
@@ -166,21 +171,15 @@ protected:
   sendMessage();
 
 private:
-  struct Topic
-  {
-    const char *name;
-    uint16_t    id;
-  };
-
   /// Set to valid message type when we're waiting for some sort of
   /// acknowledgement from the server that will transition our state.
-  uint8_t  mResponseToWaitFor;
-  uint16_t mMessageId;
-  uint8_t  mTopicCount;
-  uint8_t  mMessageBuffer[FMSN_MAX_BUFFER_SIZE];
-  uint8_t  mResponseBuffer[FMSN_MAX_BUFFER_SIZE];
-  Topic    mTopicTable[FMSN_MAX_TOPICS];
-  uint8_t  mGatewayId;
+  uint8_t   mResponseToWaitFor;
+  uint16_t  mMessageId;
+  uint8_t   mTopicCount;
+  uint8_t   mMessageBuffer[FMSN_MAX_BUFFER_SIZE];
+  uint8_t   mResponseBuffer[FMSN_MAX_BUFFER_SIZE];
+  FMSNTopic mTopicTable[FMSN_MAX_TOPICS];
+  uint8_t   mGatewayId;
   /// Default flags
   uint8_t  mFlags;
   uint16_t mKeepAliveInterval;
