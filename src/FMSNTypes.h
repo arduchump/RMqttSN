@@ -58,6 +58,8 @@
 
 #define FMSN_INVALID_TOPIC_ID 0xFFFF
 
+#define FMSN_STRUCT_PACKED __attribute__ ((__packed__))
+
 enum FMSNReturnCode
 {
   FMSNRC_ACCEPTED,
@@ -66,7 +68,7 @@ enum FMSNReturnCode
   FMSNRC_REJECTED_NOT_SUPPORTED
 };
 
-enum __attribute__ ((__packed__)) FMSNMsgType
+enum FMSNMsgType
 {
   FMSNMT_ADVERTISE,
   FMSNMT_SEARCHGW,
@@ -98,115 +100,134 @@ enum __attribute__ ((__packed__)) FMSNMsgType
 
   /// Reserved value in mqtt, but we use as invalid value.
   FMSNMT_INVALID = 0xff,
-};
+} FMSN_STRUCT_PACKED;
 
-struct __attribute__ ((__packed__)) FMSNMsgHeader
+/**
+ * @brief The FMSNMsgHeader struct
+ */
+struct FMSNMsgHeader
 {
-  uint8_t length;
-
+  uint8_t     length;
   FMSNMsgType type;
-};
+} FMSN_STRUCT_PACKED;
 
-struct __attribute__ ((__packed__)) FMSNMsgAdvertise:
-public FMSNMsgHeader
+/**
+ * @brief The FMSNMsgAdvertise struct
+ */
+struct FMSNMsgAdvertise : public FMSNMsgHeader
 {
-  uint8_t gwId;
-
+  uint8_t  gwId;
   uint16_t duration;
-};
+} FMSN_STRUCT_PACKED;
 
-struct __attribute__ ((__packed__)) FMSNMsgSearchGw:
-public FMSNMsgHeader
+/**
+ * @brief The FMSNMsgSearchGw struct
+ */
+struct FMSNMsgSearchGw : public FMSNMsgHeader
 {
   uint8_t radius;
-};
+} FMSN_STRUCT_PACKED;
 
-struct __attribute__ ((__packed__)) FMSNMsgGwInfo:
-public FMSNMsgHeader
+/**
+ * @brief The FMSNMsgGwInfo struct
+ */
+struct FMSNMsgGwInfo : public FMSNMsgHeader
 {
   uint8_t gwId;
+  char    gwAdd[0];
+} FMSN_STRUCT_PACKED;
 
-  char gwAdd[0];
-};
-
-struct __attribute__ ((__packed__)) FMSNMsgConnect:
-public FMSNMsgHeader
+/**
+ * @brief The FMSNMsgConnect struct
+ */
+struct FMSNMsgConnect :  public FMSNMsgHeader
 {
-  uint8_t flags;
-
+  uint8_t  flags;
   uint8_t  protocolId;
   uint16_t duration;
   char     clientId[0];
-};
+} FMSN_STRUCT_PACKED;
 
-struct __attribute__ ((__packed__)) FMSNMsgConnAck:
-public FMSNMsgHeader
+/**
+ * @brief The FMSNMsgConnAck struct
+ */
+struct FMSNMsgConnAck :  public FMSNMsgHeader
 {
   FMSNReturnCode returnCode;
-};
+} FMSN_STRUCT_PACKED;
 
-struct __attribute__ ((__packed__)) FMSNMsgWillTopic:
-public FMSNMsgHeader
+/**
+ * @brief The FMSNMsgWillTopic struct
+ */
+struct FMSNMsgWillTopic :  public FMSNMsgHeader
 {
   uint8_t flags;
+  char    willTopic[0];
+} FMSN_STRUCT_PACKED;
 
-  char willTopic[0];
-};
-
-struct __attribute__ ((__packed__)) FMSNMsgWillMsg:
-public FMSNMsgHeader
+/**
+ * @brief The FMSNMsgWillMsg struct
+ */
+struct FMSNMsgWillMsg :  public FMSNMsgHeader
 {
   char willmsg[0];
-};
+} FMSN_STRUCT_PACKED;
 
-struct __attribute__ ((__packed__)) FMSNMsgRegister:
-public FMSNMsgHeader
+/**
+ * @brief The FMSNMsgRegister struct
+ */
+struct FMSNMsgRegister :  public FMSNMsgHeader
 {
   uint16_t topicId;
-
   uint16_t messageId;
   char     topicName[0];
-};
+} FMSN_STRUCT_PACKED;
 
-struct __attribute__ ((__packed__)) FMSNMsgRegAck:
-public FMSNMsgHeader
+/**
+ * @brief The FMSNMsgRegAck struct
+ */
+struct FMSNMsgRegAck :  public FMSNMsgHeader
 {
-  uint16_t topicId;
-
+  uint16_t       topicId;
   uint16_t       messageId;
   FMSNReturnCode returnCode;
-};
+} FMSN_STRUCT_PACKED;
 
-struct __attribute__ ((__packed__)) FMSNMsgPublish:
-public FMSNMsgHeader
+/**
+ * @brief The FMSNMsgPublish struct
+ */
+struct FMSNMsgPublish :  public FMSNMsgHeader
 {
-  uint8_t flags;
-
+  uint8_t  flags;
   uint16_t topicId;
   uint16_t messageId;
   char     data[0];
-};
+} FMSN_STRUCT_PACKED;
 
-struct __attribute__ ((__packed__)) FMSNMsgPubAck:
-public FMSNMsgHeader
+/**
+ * @brief The FMSNMsgPubAck struct
+ */
+struct FMSNMsgPubAck :  public FMSNMsgHeader
 {
-  uint16_t topicId;
-
+  uint16_t       topicId;
   uint16_t       messageId;
   FMSNReturnCode returnCode;
-};
+} FMSN_STRUCT_PACKED;
 
-struct __attribute__ ((__packed__)) FMSNMsgPubQos2:
-public FMSNMsgHeader
+/**
+ * @brief The FMSNMsgPubQos2 struct
+ */
+struct FMSNMsgPubQos2 :  public FMSNMsgHeader
 {
   uint16_t messageId;
-};
+} FMSN_STRUCT_PACKED;
 
-struct __attribute__ ((__packed__)) FMSNMsgSubscribe:
-public FMSNMsgHeader
+/**
+ * @brief The FMSNMsgSubscribe struct
+ */
+struct FMSNMsgSubscribe :  public FMSNMsgHeader
 {
-  uint8_t flags;
-
+  uint8_t  flags;
   uint16_t messageId;
 
   union
@@ -214,61 +235,72 @@ public FMSNMsgHeader
     char     topicName[0];
     uint16_t topicId;
   };
-};
+} FMSN_STRUCT_PACKED;
 
-struct __attribute__ ((__packed__)) FMSNMsgSubAck:
-public FMSNMsgHeader
+/**
+ * @brief The FMSNMsgSubAck struct
+ */
+struct FMSNMsgSubAck :  public FMSNMsgHeader
 {
-  uint8_t flags;
-
+  uint8_t        flags;
   uint16_t       topicId;
   uint16_t       messageId;
   FMSNReturnCode returnCode;
-};
+} FMSN_STRUCT_PACKED;
 
-struct __attribute__ ((__packed__)) FMSNMsgUnsubscribe:
-public FMSNMsgHeader
+/**
+ * @brief The FMSNMsgUnsubscribe struct
+ */
+struct FMSNMsgUnsubscribe :  public FMSNMsgHeader
 {
-  uint8_t flags;
-
+  uint8_t  flags;
   uint16_t messageId;
 
-  union __attribute__ ((__packed__))
+  union
   {
-    char topicName[0];
-
+    char     topicName[0];
     uint16_t topicId;
-  };
-};
+  } FMSN_STRUCT_PACKED;
+} FMSN_STRUCT_PACKED;
 
-struct __attribute__ ((__packed__)) FMSNMsgUnsubAck:
-public FMSNMsgHeader
+/**
+ * @brief The FMSNMsgUnsubAck struct
+ */
+struct FMSNMsgUnsubAck :  public FMSNMsgHeader
 {
   uint16_t messageId;
-};
+} FMSN_STRUCT_PACKED;
 
-struct __attribute__ ((__packed__)) FMSNMsgPingReq:
-public FMSNMsgHeader
+/**
+ * @brief The FMSNMsgPingReq struct
+ */
+struct FMSNMsgPingReq :  public FMSNMsgHeader
 {
   char clientId[0];
-};
+} FMSN_STRUCT_PACKED;
 
-struct __attribute__ ((__packed__)) FMSNMsgDisconnect:
-public FMSNMsgHeader
+/**
+ * @brief The FMSNMsgDisconnect struct
+ */
+struct FMSNMsgDisconnect :  public FMSNMsgHeader
 {
   uint16_t duration;
-};
+} FMSN_STRUCT_PACKED;
 
-struct __attribute__ ((__packed__)) FMSNMsgWillTopicResp:
-public FMSNMsgHeader
+/**
+ * @brief The FMSNMsgWillTopicResp struct
+ */
+struct FMSNMsgWillTopicResp :  public FMSNMsgHeader
 {
   FMSNReturnCode returnCode;
-};
+} FMSN_STRUCT_PACKED;
 
-struct __attribute__ ((__packed__)) FMSNMsgWillMsgResp:
-public FMSNMsgHeader
+/**
+ * @brief The FMSNMsgWillMsgResp struct
+ */
+struct FMSNMsgWillMsgResp :  public FMSNMsgHeader
 {
   FMSNReturnCode returnCode;
-};
+} FMSN_STRUCT_PACKED;
 
 #endif // __INCLUDED_FDCE12F8526A11E7AA6EA088B4D1658C
