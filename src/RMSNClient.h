@@ -26,20 +26,20 @@
 #ifndef __INCLUDED_E457D8FE526A11E7AA6EA088B4D1658C
 #define __INCLUDED_E457D8FE526A11E7AA6EA088B4D1658C
 
-#include "FMSNTypes.h"
+#include "RMSNTypes.h"
 
-#define FMSN_MAX_TOPICS      10
-#define FMSN_MAX_BUFFER_SIZE 66
-#define FMSN_GET_MAX_DATA_SIZE(headerClass) \
-  ((size_t)(FMSN_MAX_BUFFER_SIZE - sizeof(headerClass)))
+#define RMSN_MAX_TOPICS      10
+#define RMSN_MAX_BUFFER_SIZE 66
+#define RMSN_GET_MAX_DATA_SIZE(headerClass) \
+  ((size_t)(RMSN_MAX_BUFFER_SIZE - sizeof(headerClass)))
 
-class FMSNBasicClient
+class RMSNBasicClient
 {
 public:
-  FMSNBasicClient(Stream *stream);
+  RMSNBasicClient(Stream *stream);
 
   virtual
-  ~FMSNBasicClient();
+  ~RMSNBasicClient();
 
   void
   setQos(uint8_t qos);
@@ -47,9 +47,9 @@ public:
   uint8_t
   qos();
 
-  const FMSNTopic *
+  const RMSNTopic *
   getTopicByName(const char *name) const;
-  const FMSNTopic *
+  const RMSNTopic *
   getTopicById(const uint16_t &id) const;
 
   void
@@ -114,23 +114,23 @@ public:
 
 protected:
   virtual void
-  advertiseHandler(const FMSNMsgAdvertise *msg);
+  advertiseHandler(const RMSNMsgAdvertise *msg);
   virtual void
-  gwInfoHandler(const FMSNMsgGwInfo *msg);
+  gwInfoHandler(const RMSNMsgGwInfo *msg);
   virtual void
-  connAckHandler(const FMSNMsgConnAck *msg);
+  connAckHandler(const RMSNMsgConnAck *msg);
   virtual void
-  willTopicReqHandler(const FMSNMsgHeader *msg);
+  willTopicReqHandler(const RMSNMsgHeader *msg);
   virtual void
-  willMsgReqHandler(const FMSNMsgHeader *msg);
+  willMsgReqHandler(const RMSNMsgHeader *msg);
   virtual void
-  regAckHandler(const FMSNMsgRegAck *msg);
+  regAckHandler(const RMSNMsgRegAck *msg);
   virtual void
-  publishHandler(const FMSNMsgPublish *msg);
+  publishHandler(const RMSNMsgPublish *msg);
   virtual void
-  registerHandler(const FMSNMsgRegister *msg);
+  registerHandler(const RMSNMsgRegister *msg);
   virtual void
-  pubAckHandler(const FMSNMsgPubAck *msg);
+  pubAckHandler(const RMSNMsgPubAck *msg);
 
 #ifdef USE_QOS2
   virtual void
@@ -142,26 +142,26 @@ protected:
 
 #endif
   virtual void
-  subAckHandler(const FMSNMsgSubAck *msg);
+  subAckHandler(const RMSNMsgSubAck *msg);
   virtual void
-  unsubAckHandler(const FMSNMsgUnsubAck *msg);
+  unsubAckHandler(const RMSNMsgUnsubAck *msg);
   virtual void
-  pingReqHandler(const FMSNMsgPingReq *msg);
+  pingReqHandler(const RMSNMsgPingReq *msg);
   virtual void
   pingRespHandler();
   virtual void
-  disconnectHandler(const FMSNMsgDisconnect *msg);
+  disconnectHandler(const RMSNMsgDisconnect *msg);
   virtual void
-  willTopicRespHandler(const FMSNMsgWillTopicResp *msg);
+  willTopicRespHandler(const RMSNMsgWillTopicResp *msg);
   virtual void
-  willMsgRespHandler(const FMSNMsgWillMsgResp *msg);
+  willMsgRespHandler(const RMSNMsgWillMsgResp *msg);
 
   void
   regAck(const uint16_t topicId, const uint16_t messageId,
-         const FMSNReturnCode returnCode);
+         const RMSNReturnCode returnCode);
   void
   pubAck(const uint16_t topicId, const uint16_t messageId,
-         const FMSNReturnCode returnCode);
+         const RMSNReturnCode returnCode);
 
   void
   dispatch();
@@ -176,9 +176,9 @@ private:
   uint8_t   mResponseToWaitFor;
   uint16_t  mMessageId;
   uint8_t   mTopicCount;
-  uint8_t   mMessageBuffer[FMSN_MAX_BUFFER_SIZE];
-  uint8_t   mResponseBuffer[FMSN_MAX_BUFFER_SIZE];
-  FMSNTopic mTopicTable[FMSN_MAX_TOPICS];
+  uint8_t   mMessageBuffer[RMSN_MAX_BUFFER_SIZE];
+  uint8_t   mResponseBuffer[RMSN_MAX_BUFFER_SIZE];
+  RMSNTopic mTopicTable[RMSN_MAX_TOPICS];
   uint8_t   mGatewayId;
   /// Default flags
   uint8_t  mFlags;
@@ -189,10 +189,10 @@ private:
   String  mClientId;
 };
 
-class FMSNClient : public FMSNBasicClient
+class RMSNClient : public RMSNBasicClient
 {
 public:
-  FMSNClient(Stream *stream);
+  RMSNClient(Stream *stream);
 
   bool
   waitForResponse();

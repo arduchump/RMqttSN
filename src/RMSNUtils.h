@@ -25,7 +25,7 @@
 #ifndef __INCLUDED_895A8BE057E211E7AA6EA088B4D1658C
 #define __INCLUDED_895A8BE057E211E7AA6EA088B4D1658C
 
-#include "FMSNTypes.h"
+#include "RMSNTypes.h"
 
 #define fmsnSafeCopyText(dest, src, size) \
   do \
@@ -38,8 +38,8 @@
 /// Get respond type from a reqeuest type.
 ///
 /// @arg requestType
-FMSNMsgType
-fmsnGetRespondType(FMSNMsgType requestType);
+RMSNMsgType
+fmsnGetRespondType(RMSNMsgType requestType);
 
 ///
 /// @brief Check if qos level is high qos

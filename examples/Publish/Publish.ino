@@ -1,22 +1,22 @@
 #include <Arduino.h>
 #include <FlyMqttSN.h>
 
-class MqttClient : public FMSNClient
+class MqttClient : public RMSNClient
 {
 public:
-  MqttClient(Stream *stream) : FMSNClient(stream)
+  MqttClient(Stream *stream) : RMSNClient(stream)
   {
   }
 
 protected:
   virtual void
-  pubAckHandler(const FMSNMsgPubAck *msg);
+  pubAckHandler(const RMSNMsgPubAck *msg);
   virtual void
-  connAckHandler(const FMSNMsgConnAck *msg);
+  connAckHandler(const RMSNMsgConnAck *msg);
   virtual void
-  regAckHandler(const FMSNMsgRegAck *msg);
+  regAckHandler(const RMSNMsgRegAck *msg);
 
-//  virtual void pubackHandler(const FMSNMsgPubAck *msg);
+//  virtual void pubackHandler(const RMSNMsgPubAck *msg);
 };
 
 static MqttClient
@@ -60,7 +60,7 @@ loop()
     Serial.println(F("Try connect to broker with these settings : "));
     Serial.println(F("QOS: 0, Keep Alive Interval: 30s, Client ID: Shit007"));
 
-    sMqttClient.setQos(FMSN_FLAG_QOS_1);
+    sMqttClient.setQos(RMSN_FLAG_QOS_1);
     sMqttClient.setClientId("Shit007");
     sMqttClient.connect();
     ++sProgress;
@@ -126,27 +126,27 @@ loop()
 }
 
 void
-MqttClient::pubAckHandler(const FMSNMsgPubAck *msg)
+MqttClient::pubAckHandler(const RMSNMsgPubAck *msg)
 {
-  FMSNClient::pubAckHandler(msg);
+  RMSNClient::pubAckHandler(msg);
 
   Serial.println(F("Published!"));
   ++sProgress;
 }
 
 void
-MqttClient::connAckHandler(const FMSNMsgConnAck *msg)
+MqttClient::connAckHandler(const RMSNMsgConnAck *msg)
 {
-  FMSNClient::connAckHandler(msg);
+  RMSNClient::connAckHandler(msg);
 
   Serial.println(F("Connected!"));
   ++sProgress;
 }
 
 void
-MqttClient::regAckHandler(const FMSNMsgRegAck *msg)
+MqttClient::regAckHandler(const RMSNMsgRegAck *msg)
 {
-  FMSNClient::regAckHandler(msg);
+  RMSNClient::regAckHandler(msg);
 
   Serial.println(F("Registerred!"));
   ++sProgress;
