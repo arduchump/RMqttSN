@@ -1,5 +1,14 @@
 #include <Arduino.h>
-#include <FlyMqttSN.h>
+#include <Arduino_FreeRTOS.h>
+#include <FreeRTOSMallocFixer.h>
+#include <ArduinouClibcpp.h>
+#include <RabirdToolkitThirdParties.h>
+#include <RabirdToolkit.h>
+#include <RMqttSN.h>
+
+#include <RApplication.h>
+#include <RThread.h>
+#include <REventLoop.h>
 
 class MqttClient : public RMSNClient
 {
@@ -19,33 +28,39 @@ protected:
 //  virtual void pubackHandler(const RMSNMsgPubAck *msg);
 };
 
-static MqttClient
-  sMqttClient(&Serial3);
-static volatile int
-  sProgress = 0;
+static void
+mqttClientProcess();
 
-void
-setup()
+/**
+ * @brief sMqttClient
+ */
+static MqttClient   sMqttClient(&Serial3);
+static volatile int sProgress = 0;
+
+int
+rMain(int argc, rfchar *argv[])
 {
-  // Serial 0 use for print out debug information
+  // Add your initialization code here
   Serial.begin(9600);
-
-  // Serial 3 use for communicate with PC.
   Serial3.begin(9600);
 
-  while(!Serial)  // for the Arduino Leonardo/Micro only
+  while((!Serial) || (!Serial3))
   {
   }
 
-  while(!Serial3)  // for the Arduino Leonardo/Micro only
-  {
-  }
+  Serial.println(F("RMqttSN library publish example."));
 
-  Serial.println(F("Fly MQTT-SN library example."));
+  // Application starts from here!
+  RApplication *app = new RApplication();
+
+  auto eventLoop = app->thread()->eventLoop();
+  eventLoop->idle.connect(&mqttClientProcess);
+
+  return 0;
 }
 
-void
-loop()
+static void
+mqttClientProcess()
 {
   sMqttClient.parseStream();
 
