@@ -24,7 +24,10 @@
  */
 
 #include <Arduino.h>
-
+#include <RSignal.h>
+#include <RCoreApplication.h>
+#include <REventLoop.h>
+#include <RThread.h>
 #include "RMSNClient.h"
 #include "RMSNUtils.h"
 
@@ -833,6 +836,8 @@ RMSNClient::RMSNClient(Stream *stream)
 {
   mResponseTimer.setSingleShot(false);
   mResponseTimer.setInterval(RMSN_T_RETRY * 1000L);
+
+  R_CONNECT(rCoreApp->thread()->eventLoop(), idle, this, parseStream);
 }
 
 void

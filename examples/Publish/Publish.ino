@@ -62,8 +62,6 @@ rMain(int argc, rfchar *argv[])
 static void
 mqttClientProcess()
 {
-  sMqttClient.parseStream();
-
   if(sMqttClient.responseToWaitFor() != RMSNMT_INVALID)
   {
     return;

@@ -34,7 +34,7 @@
 #define RMSN_GET_MAX_DATA_SIZE(headerClass) \
   ((size_t)(RMSN_MAX_BUFFER_SIZE - sizeof(headerClass)))
 
-class RMSNBasicClient
+class RMSNBasicClient : public RObject
 {
 public:
   RMSNBasicClient(Stream *stream);
