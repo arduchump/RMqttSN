@@ -27,6 +27,7 @@
 #define __INCLUDED_E457D8FE526A11E7AA6EA088B4D1658C
 
 #include "RMSNTypes.h"
+#include <RTimer.h>
 
 #define RMSN_MAX_TOPICS      10
 #define RMSN_MAX_BUFFER_SIZE 66
@@ -194,15 +195,16 @@ class RMSNClient : public RMSNBasicClient
 public:
   RMSNClient(Stream *stream);
 
-  bool
-  waitForResponse();
-
   void
   startResponseTimer();
 
 private:
-  unsigned long mResponseTimer;
-  uint8_t       mResponseRetries;
+  void
+  onResponseTimerTimeout();
+
+private:
+  RTimer  mResponseTimer;
+  uint8_t mResponseRetries;
 };
 
 #endif // __INCLUDED_E457D8FE526A11E7AA6EA088B4D1658C

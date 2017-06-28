@@ -64,7 +64,7 @@ mqttClientProcess()
 {
   sMqttClient.parseStream();
 
-  if(sMqttClient.waitForResponse())
+  if(sMqttClient.responseToWaitFor() != RMSNMT_INVALID)
   {
     return;
   }

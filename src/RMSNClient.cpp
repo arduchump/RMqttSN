@@ -829,43 +829,39 @@ RMSNBasicClient::pingResp()
 
 RMSNClient::RMSNClient(Stream *stream)
   : RMSNBasicClient(stream)
-  , mResponseTimer(0)
   , mResponseRetries(0)
 {
-}
-
-bool
-RMSNClient::waitForResponse()
-{
-  if(responseToWaitFor() != RMSNMT_INVALID)
-  {
-    // TODO: Watch out for overflow.
-    if((millis() - mResponseTimer) > (RMSN_T_RETRY * 1000L))
-    {
-      mResponseTimer = millis();
-
-      if(mResponseRetries == 0)
-      {
-        timeout();
-        disconnectHandler(NULL);
-
-        // stop retry timer
-      }
-      else
-      {
-        sendMessage();
-      }
-
-      --mResponseRetries;
-    }
-  }
-
-  return responseToWaitFor() != RMSNMT_INVALID;
+  mResponseTimer.setSingleShot(false);
+  mResponseTimer.setInterval(RMSN_T_RETRY * 1000L);
 }
 
 void
 RMSNClient::startResponseTimer()
 {
-  mResponseTimer   = millis();
   mResponseRetries = RMSN_N_RETRY;
+  mResponseTimer.start();
+}
+
+void
+RMSNClient::onResponseTimerTimeout()
+{
+  if(responseToWaitFor() == RMSNMT_INVALID)
+  {
+    mResponseTimer.stop();
+    return;
+  }
+
+  if(mResponseRetries <= 0)
+  {
+    timeout();
+    disconnectHandler(NULL);
+
+    mResponseTimer.stop();
+  }
+  else
+  {
+    sendMessage();
+  }
+
+  --mResponseRetries;
 }
