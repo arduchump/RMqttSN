@@ -1,7 +1,5 @@
 #include <Arduino.h>
-#include <Arduino_FreeRTOS.h>
-#include <FreeRTOSMallocFixer.h>
-#include <ArduinouClibcpp.h>
+#include <RabirdToolkitConfigNonOS.h>
 #include <RabirdToolkitThirdParties.h>
 #include <RabirdToolkit.h>
 #include <RMqttSN.h>
