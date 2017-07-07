@@ -862,11 +862,9 @@ RMSNClient::onResponseTimerTimeout()
     disconnectHandler(NULL);
 
     mResponseTimer.stop();
-  }
-  else
-  {
-    sendMessage();
+    return;
   }
 
+  sendMessage();
   --mResponseRetries;
 }
