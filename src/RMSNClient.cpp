@@ -37,6 +37,7 @@ RMSNBasicClient::RMSNBasicClient(Stream *stream) :
   mTopicCount(0),
   mGatewayId(0),
   mFlags(RMSN_FLAG_QOS_0),
+  mIsTimeOut(false),
   mKeepAliveInterval(30),
   mStream(stream)
 {
@@ -307,6 +308,8 @@ RMSNBasicClient::sendMessage()
 {
   RMSNMsgHeader *hdr = reinterpret_cast<RMSNMsgHeader *>(mMessageBuffer);
 
+  mIsTimeOut = false;
+
   mStream->write(mMessageBuffer, hdr->length);
   mStream->flush();
 
@@ -317,6 +320,12 @@ RMSNBasicClient::sendMessage()
     // Cheesy hack to ensure two messages don't run-on into one send.
 //        delay(10);
   }
+}
+
+bool
+RMSNBasicClient::isTimeOut() const
+{
+  return mIsTimeOut;
 }
 
 uint8_t
@@ -353,6 +362,7 @@ void
 RMSNBasicClient::timeout()
 {
   mResponseToWaitFor = RMSNMT_INVALID;
+  mIsTimeOut         = true;
 }
 
 void

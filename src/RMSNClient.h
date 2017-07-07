@@ -113,6 +113,9 @@ public:
   uint8_t
   responseToWaitFor() const;
 
+  bool
+  isTimeOut() const;
+
 protected:
   virtual void
   advertiseHandler(const RMSNMsgAdvertise *msg);
@@ -182,7 +185,15 @@ private:
   RMSNTopic mTopicTable[RMSN_MAX_TOPICS];
   uint8_t   mGatewayId;
   /// Default flags
-  uint8_t  mFlags;
+  uint8_t mFlags;
+
+  /**
+   * @brief mIsTimeOut
+   *
+   * If a command send timeout, we should set this timeout flag.
+   * It will be reset during sendMessage().
+   */
+  bool     mIsTimeOut;
   uint16_t mKeepAliveInterval;
 
   /// Target stream we will send to.
