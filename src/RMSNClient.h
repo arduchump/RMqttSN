@@ -34,13 +34,13 @@
 #define RMSN_GET_MAX_DATA_SIZE(headerClass) \
   ((size_t)(RMSN_MAX_BUFFER_SIZE - sizeof(headerClass)))
 
-class RMSNBasicClient : public RObject
+class RMSNClient : public RObject
 {
 public:
-  RMSNBasicClient(Stream *stream);
+  RMSNClient(Stream *stream);
 
   virtual
-  ~RMSNBasicClient();
+  ~RMSNClient();
 
   void
   setQos(uint8_t qos);
@@ -175,6 +175,10 @@ protected:
   sendMessage();
 
 private:
+  void
+  onResponseTimerTimeout();
+
+private:
   /// Set to valid message type when we're waiting for some sort of
   /// acknowledgement from the server that will transition our state.
   uint8_t   mResponseToWaitFor;
@@ -199,21 +203,6 @@ private:
   /// Target stream we will send to.
   Stream *mStream;
   String  mClientId;
-};
-
-class RMSNClient : public RMSNBasicClient
-{
-public:
-  RMSNClient(Stream *stream);
-
-  void
-  startResponseTimer();
-
-private:
-  void
-  onResponseTimerTimeout();
-
-private:
   RTimer  mResponseTimer;
   uint8_t mResponseRetries;
 };

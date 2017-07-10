@@ -31,7 +31,7 @@
 #include "RMSNClient.h"
 #include "RMSNUtils.h"
 
-RMSNBasicClient::RMSNBasicClient(Stream *stream) :
+RMSNClient::RMSNClient(Stream *stream) :
   mResponseToWaitFor(RMSNMT_INVALID),
   mMessageId(0),
   mTopicCount(0),
@@ -39,37 +39,43 @@ RMSNBasicClient::RMSNBasicClient(Stream *stream) :
   mFlags(RMSN_FLAG_QOS_0),
   mIsTimeOut(false),
   mKeepAliveInterval(30),
-  mStream(stream)
+  mStream(stream),
+  mResponseRetries(0)
 {
   memset(mTopicTable, 0, sizeof(RMSNTopic) * RMSN_MAX_TOPICS);
   memset(mMessageBuffer, 0, RMSN_MAX_BUFFER_SIZE);
   memset(mResponseBuffer, 0, RMSN_MAX_BUFFER_SIZE);
+
+  mResponseTimer.setSingleShot(false);
+  mResponseTimer.setInterval(RMSN_T_RETRY * 1000L);
+  R_CONNECT(&mResponseTimer, timeout, this, onResponseTimerTimeout);
+  R_CONNECT(rCoreApp->thread()->eventLoop(), idle, this, parseStream);
 }
 
-RMSNBasicClient::~RMSNBasicClient()
+RMSNClient::~RMSNClient()
 {
 }
 
 void
-RMSNBasicClient::setQos(uint8_t qos)
+RMSNClient::setQos(uint8_t qos)
 {
   mFlags |= (qos & RMSN_QOS_MASK);
 }
 
 uint8_t
-RMSNBasicClient::qos()
+RMSNClient::qos()
 {
   return mFlags & RMSN_QOS_MASK;
 }
 
 uint16_t
-RMSNBasicClient::bswap(const uint16_t val)
+RMSNClient::bswap(const uint16_t val)
 {
   return (val << 8) | (val >> 8);
 }
 
 void
-RMSNBasicClient::setTopic(const char *name, const uint16_t &id)
+RMSNClient::setTopic(const char *name, const uint16_t &id)
 {
   auto topic = getTopicByName(name);
 
@@ -90,7 +96,7 @@ RMSNBasicClient::setTopic(const char *name, const uint16_t &id)
 }
 
 const RMSNTopic *
-RMSNBasicClient::getTopicByName(const char *name) const
+RMSNClient::getTopicByName(const char *name) const
 {
   for(uint8_t i = 0; i < mTopicCount; ++i)
   {
@@ -104,7 +110,7 @@ RMSNBasicClient::getTopicByName(const char *name) const
 }
 
 const RMSNTopic *
-RMSNBasicClient::getTopicById(const uint16_t &id) const
+RMSNClient::getTopicById(const uint16_t &id) const
 {
   for(uint8_t i = 0; i < mTopicCount; ++i)
   {
@@ -118,7 +124,7 @@ RMSNBasicClient::getTopicById(const uint16_t &id) const
 }
 
 void
-RMSNBasicClient::parseStream()
+RMSNClient::parseStream()
 {
   if(mStream->available() > 0)
   {
@@ -141,7 +147,7 @@ RMSNBasicClient::parseStream()
 }
 
 void
-RMSNBasicClient::dispatch()
+RMSNClient::dispatch()
 {
   RMSNMsgHeader *responseMessage = (RMSNMsgHeader *)mResponseBuffer;
   bool           handled         = true;
@@ -304,7 +310,7 @@ RMSNBasicClient::dispatch()
 }
 
 void
-RMSNBasicClient::sendMessage()
+RMSNClient::sendMessage()
 {
   RMSNMsgHeader *hdr = reinterpret_cast<RMSNMsgHeader *>(mMessageBuffer);
 
@@ -323,76 +329,76 @@ RMSNBasicClient::sendMessage()
 }
 
 bool
-RMSNBasicClient::isTimeOut() const
+RMSNClient::isTimeOut() const
 {
   return mIsTimeOut;
 }
 
 uint8_t
-RMSNBasicClient::responseToWaitFor() const
+RMSNClient::responseToWaitFor() const
 {
   return mResponseToWaitFor;
 }
 
 String
-RMSNBasicClient::clientId() const
+RMSNClient::clientId() const
 {
   return mClientId;
 }
 
 void
-RMSNBasicClient::setClientId(const String &clientId)
+RMSNClient::setClientId(const String &clientId)
 {
   mClientId = clientId;
 }
 
 uint16_t
-RMSNBasicClient::keepAliveInterval() const
+RMSNClient::keepAliveInterval() const
 {
   return mKeepAliveInterval;
 }
 
 void
-RMSNBasicClient::setKeepAliveInterval(const uint16_t &keepAliveInterval)
+RMSNClient::setKeepAliveInterval(const uint16_t &keepAliveInterval)
 {
   mKeepAliveInterval = keepAliveInterval;
 }
 
 void
-RMSNBasicClient::timeout()
+RMSNClient::timeout()
 {
   mResponseToWaitFor = RMSNMT_INVALID;
   mIsTimeOut         = true;
 }
 
 void
-RMSNBasicClient::advertiseHandler(const RMSNMsgAdvertise *msg)
+RMSNClient::advertiseHandler(const RMSNMsgAdvertise *msg)
 {
   mGatewayId = msg->gwId;
 }
 
 void
-RMSNBasicClient::gwInfoHandler(const RMSNMsgGwInfo *msg)
+RMSNClient::gwInfoHandler(const RMSNMsgGwInfo *msg)
 {
 }
 
 void
-RMSNBasicClient::connAckHandler(const RMSNMsgConnAck *msg)
+RMSNClient::connAckHandler(const RMSNMsgConnAck *msg)
 {
 }
 
 void
-RMSNBasicClient::willTopicReqHandler(const RMSNMsgHeader *msg)
+RMSNClient::willTopicReqHandler(const RMSNMsgHeader *msg)
 {
 }
 
 void
-RMSNBasicClient::willMsgReqHandler(const RMSNMsgHeader *msg)
+RMSNClient::willMsgReqHandler(const RMSNMsgHeader *msg)
 {
 }
 
 void
-RMSNBasicClient::regAckHandler(const RMSNMsgRegAck *msg)
+RMSNClient::regAckHandler(const RMSNMsgRegAck *msg)
 {
   if((msg->returnCode == 0)
      && (mTopicCount > 0)
@@ -410,7 +416,7 @@ RMSNBasicClient::regAckHandler(const RMSNMsgRegAck *msg)
 }
 
 void
-RMSNBasicClient::pubAckHandler(const RMSNMsgPubAck *msg)
+RMSNClient::pubAckHandler(const RMSNMsgPubAck *msg)
 {
 }
 
@@ -433,33 +439,33 @@ MQTTSN::pubcompHandler(const msg_pubqos2 *msg)
 #endif
 
 void
-RMSNBasicClient::pingReqHandler(const RMSNMsgPingReq *msg)
+RMSNClient::pingReqHandler(const RMSNMsgPingReq *msg)
 {
   pingResp();
 }
 
 void
-RMSNBasicClient::subAckHandler(const RMSNMsgSubAck *msg)
+RMSNClient::subAckHandler(const RMSNMsgSubAck *msg)
 {
 }
 
 void
-RMSNBasicClient::unsubAckHandler(const RMSNMsgUnsubAck *msg)
+RMSNClient::unsubAckHandler(const RMSNMsgUnsubAck *msg)
 {
 }
 
 void
-RMSNBasicClient::disconnectHandler(const RMSNMsgDisconnect *msg)
+RMSNClient::disconnectHandler(const RMSNMsgDisconnect *msg)
 {
 }
 
 void
-RMSNBasicClient::pingRespHandler()
+RMSNClient::pingRespHandler()
 {
 }
 
 void
-RMSNBasicClient::publishHandler(const RMSNMsgPublish *msg)
+RMSNClient::publishHandler(const RMSNMsgPublish *msg)
 {
   if(msg->flags & RMSN_FLAG_QOS_1)
   {
@@ -475,7 +481,7 @@ RMSNBasicClient::publishHandler(const RMSNMsgPublish *msg)
 }
 
 void
-RMSNBasicClient::registerHandler(const RMSNMsgRegister *msg)
+RMSNClient::registerHandler(const RMSNMsgRegister *msg)
 {
   RMSNReturnCode ret     = RMSNRC_REJECTED_INVALID_TOPIC_ID;
   uint16_t       topicId = bswap(msg->topicId);
@@ -493,17 +499,17 @@ RMSNBasicClient::registerHandler(const RMSNMsgRegister *msg)
 }
 
 void
-RMSNBasicClient::willTopicRespHandler(const RMSNMsgWillTopicResp *msg)
+RMSNClient::willTopicRespHandler(const RMSNMsgWillTopicResp *msg)
 {
 }
 
 void
-RMSNBasicClient::willMsgRespHandler(const RMSNMsgWillMsgResp *msg)
+RMSNClient::willMsgRespHandler(const RMSNMsgWillMsgResp *msg)
 {
 }
 
 void
-RMSNBasicClient::searchGw(const uint8_t radius)
+RMSNClient::searchGw(const uint8_t radius)
 {
   RMSNMsgSearchGw *msg = reinterpret_cast<RMSNMsgSearchGw *>(mMessageBuffer);
 
@@ -516,7 +522,7 @@ RMSNBasicClient::searchGw(const uint8_t radius)
 }
 
 void
-RMSNBasicClient::connect()
+RMSNClient::connect()
 {
   RMSNMsgConnect *msg = reinterpret_cast<RMSNMsgConnect *>(mMessageBuffer);
 
@@ -535,7 +541,7 @@ RMSNBasicClient::connect()
 }
 
 void
-RMSNBasicClient::willTopic(const char *willTopic, const bool update)
+RMSNClient::willTopic(const char *willTopic, const bool update)
 {
   if(willTopic == NULL)
   {
@@ -564,8 +570,8 @@ RMSNBasicClient::willTopic(const char *willTopic, const bool update)
 }
 
 void
-RMSNBasicClient::willMsg(const void *willMsg, const uint8_t willMsgLen,
-                         const bool update)
+RMSNClient::willMsg(const void *willMsg, const uint8_t willMsgLen,
+                    const bool update)
 {
   RMSNMsgWillMsg *msg = reinterpret_cast<RMSNMsgWillMsg *>(mMessageBuffer);
 
@@ -577,7 +583,7 @@ RMSNBasicClient::willMsg(const void *willMsg, const uint8_t willMsgLen,
 }
 
 void
-RMSNBasicClient::disconnect(const uint16_t duration)
+RMSNClient::disconnect(const uint16_t duration)
 {
   RMSNMsgDisconnect *msg =
     reinterpret_cast<RMSNMsgDisconnect *>(mMessageBuffer);
@@ -596,12 +602,14 @@ RMSNBasicClient::disconnect(const uint16_t duration)
 }
 
 void
-RMSNBasicClient::startResponseTimer()
+RMSNClient::startResponseTimer()
 {
+  mResponseRetries = RMSN_N_RETRY;
+  mResponseTimer.start();
 }
 
 bool
-RMSNBasicClient::registerTopic(const char *name)
+RMSNClient::registerTopic(const char *name)
 {
   if((RMSNMT_INVALID == mResponseToWaitFor)
      && (mTopicCount < RMSN_MAX_TOPICS))
@@ -631,8 +639,8 @@ RMSNBasicClient::registerTopic(const char *name)
 }
 
 void
-RMSNBasicClient::regAck(const uint16_t topicId, const uint16_t messageId,
-                        const RMSNReturnCode returnCode)
+RMSNClient::regAck(const uint16_t topicId, const uint16_t messageId,
+                   const RMSNReturnCode returnCode)
 {
   RMSNMsgRegAck *msg = reinterpret_cast<RMSNMsgRegAck *>(mMessageBuffer);
 
@@ -646,8 +654,8 @@ RMSNBasicClient::regAck(const uint16_t topicId, const uint16_t messageId,
 }
 
 void
-RMSNBasicClient::publish(const uint16_t topicId, const void *data,
-                         const uint8_t dataLen)
+RMSNClient::publish(const uint16_t topicId, const void *data,
+                    const uint8_t dataLen)
 {
   ++mMessageId;
 
@@ -708,8 +716,8 @@ MQTTSN::pubcomp()
 #endif
 
 void
-RMSNBasicClient::pubAck(const uint16_t topicId, const uint16_t messageId,
-                        const RMSNReturnCode returnCode)
+RMSNClient::pubAck(const uint16_t topicId, const uint16_t messageId,
+                   const RMSNReturnCode returnCode)
 {
   RMSNMsgPubAck *msg = reinterpret_cast<RMSNMsgPubAck *>(mMessageBuffer);
 
@@ -723,7 +731,7 @@ RMSNBasicClient::pubAck(const uint16_t topicId, const uint16_t messageId,
 }
 
 void
-RMSNBasicClient::subscribeByName(const char *topicName)
+RMSNClient::subscribeByName(const char *topicName)
 {
   ++mMessageId;
 
@@ -747,7 +755,7 @@ RMSNBasicClient::subscribeByName(const char *topicName)
 }
 
 void
-RMSNBasicClient::subscribeById(const uint16_t topicId)
+RMSNClient::subscribeById(const uint16_t topicId)
 {
   ++mMessageId;
 
@@ -768,7 +776,7 @@ RMSNBasicClient::subscribeById(const uint16_t topicId)
 }
 
 void
-RMSNBasicClient::unsubscribeByName(const char *topicName)
+RMSNClient::unsubscribeByName(const char *topicName)
 {
   ++mMessageId;
 
@@ -793,7 +801,7 @@ RMSNBasicClient::unsubscribeByName(const char *topicName)
 }
 
 void
-RMSNBasicClient::unsubscribeById(const uint16_t topicId)
+RMSNClient::unsubscribeById(const uint16_t topicId)
 {
   ++mMessageId;
 
@@ -815,7 +823,7 @@ RMSNBasicClient::unsubscribeById(const uint16_t topicId)
 }
 
 void
-RMSNBasicClient::pingReq(const char *clientId)
+RMSNClient::pingReq(const char *clientId)
 {
   RMSNMsgPingReq *msg = reinterpret_cast<RMSNMsgPingReq *>(mMessageBuffer);
 
@@ -830,7 +838,7 @@ RMSNBasicClient::pingReq(const char *clientId)
 }
 
 void
-RMSNBasicClient::pingResp()
+RMSNClient::pingResp()
 {
   RMSNMsgHeader *msg = reinterpret_cast<RMSNMsgHeader *>(mMessageBuffer);
 
@@ -838,23 +846,6 @@ RMSNBasicClient::pingResp()
   msg->type   = fmsnGetRespondType(RMSNMT_PINGREQ);
 
   sendMessage();
-}
-
-RMSNClient::RMSNClient(Stream *stream)
-  : RMSNBasicClient(stream)
-  , mResponseRetries(0)
-{
-  mResponseTimer.setSingleShot(false);
-  mResponseTimer.setInterval(RMSN_T_RETRY * 1000L);
-  R_CONNECT(&mResponseTimer, timeout, this, onResponseTimerTimeout);
-  R_CONNECT(rCoreApp->thread()->eventLoop(), idle, this, parseStream);
-}
-
-void
-RMSNClient::startResponseTimer()
-{
-  mResponseRetries = RMSN_N_RETRY;
-  mResponseTimer.start();
 }
 
 void
