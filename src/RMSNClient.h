@@ -28,6 +28,7 @@
 
 #include "RMSNTypes.h"
 #include <RTimer.h>
+#include <RSignal.h>
 
 #define RMSN_MAX_TOPICS      10
 #define RMSN_MAX_BUFFER_SIZE 66
@@ -95,7 +96,7 @@ public:
   void
   disconnect(const uint16_t duration);
 
-  virtual void
+  void
   startResponseTimer();
   virtual void
   timeout();
