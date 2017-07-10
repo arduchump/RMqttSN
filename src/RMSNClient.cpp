@@ -340,6 +340,18 @@ RMSNClient::isTimeout() const
   return mIsTimeout;
 }
 
+bool
+RMSNClient::isResponsedOrTimeout() const
+{
+  if((RMSNMT_INVALID == mResponseToWaitFor)
+     || isTimeout())
+  {
+    return true;
+  }
+
+  return false;
+}
+
 uint8_t
 RMSNClient::responseToWaitFor() const
 {

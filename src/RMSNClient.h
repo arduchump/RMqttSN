@@ -115,6 +115,8 @@ public:
 
   bool
   isTimeout() const;
+  bool
+  isResponsedOrTimeout() const;
 
 protected:
   virtual void
