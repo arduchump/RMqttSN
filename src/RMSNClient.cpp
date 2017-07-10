@@ -305,6 +305,12 @@ RMSNClient::dispatch()
 
   if(handled)
   {
+    if(mResponseToWaitFor != RMSNMT_INVALID)
+    {
+      // If responsed, we stop the response timer.
+      mResponseTimer.stop();
+    }
+
     mResponseToWaitFor = RMSNMT_INVALID;
   }
 }
