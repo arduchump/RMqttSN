@@ -114,7 +114,7 @@ public:
   responseToWaitFor() const;
 
   bool
-  isTimeOut() const;
+  isTimeout() const;
 
 protected:
   virtual void
@@ -192,12 +192,12 @@ private:
   uint8_t mFlags;
 
   /**
-   * @brief mIsTimeOut
+   * @brief mIsTimeout
    *
    * If a command send timeout, we should set this timeout flag.
    * It will be reset during sendMessage().
    */
-  bool     mIsTimeOut;
+  bool     mIsTimeout;
   uint16_t mKeepAliveInterval;
 
   /// Target stream we will send to.

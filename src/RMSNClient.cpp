@@ -37,7 +37,7 @@ RMSNClient::RMSNClient(Stream *stream) :
   mTopicCount(0),
   mGatewayId(0),
   mFlags(RMSN_FLAG_QOS_0),
-  mIsTimeOut(false),
+  mIsTimeout(false),
   mKeepAliveInterval(30),
   mStream(stream),
   mResponseRetries(0)
@@ -320,7 +320,7 @@ RMSNClient::sendMessage()
 {
   RMSNMsgHeader *hdr = reinterpret_cast<RMSNMsgHeader *>(mMessageBuffer);
 
-  mIsTimeOut = false;
+  mIsTimeout = false;
 
   mStream->write(mMessageBuffer, hdr->length);
   mStream->flush();
@@ -335,9 +335,9 @@ RMSNClient::sendMessage()
 }
 
 bool
-RMSNClient::isTimeOut() const
+RMSNClient::isTimeout() const
 {
-  return mIsTimeOut;
+  return mIsTimeout;
 }
 
 uint8_t
@@ -374,7 +374,7 @@ void
 RMSNClient::timeout()
 {
   mResponseToWaitFor = RMSNMT_INVALID;
-  mIsTimeOut         = true;
+  mIsTimeout         = true;
 }
 
 void
