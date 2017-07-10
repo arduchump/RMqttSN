@@ -846,7 +846,7 @@ RMSNClient::RMSNClient(Stream *stream)
 {
   mResponseTimer.setSingleShot(false);
   mResponseTimer.setInterval(RMSN_T_RETRY * 1000L);
-
+  R_CONNECT(&mResponseTimer, timeout, this, onResponseTimerTimeout);
   R_CONNECT(rCoreApp->thread()->eventLoop(), idle, this, parseStream);
 }
 
