@@ -300,6 +300,7 @@ RMSNClient::dispatch()
     break;
 
   default:
+    received.emit(responseMessage);
     return;
   }
 
@@ -313,6 +314,8 @@ RMSNClient::dispatch()
 
     mResponseToWaitFor = RMSNMT_INVALID;
   }
+
+  received.emit(responseMessage);
 }
 
 void

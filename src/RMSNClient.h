@@ -39,8 +39,6 @@ class RMSNClient : public RObject
 {
 public:
   RMSNClient(Stream *stream);
-
-  virtual
   ~RMSNClient();
 
   void
@@ -98,7 +96,7 @@ public:
 
   void
   startResponseTimer();
-  virtual void
+  void
   timeout();
 
   uint16_t
@@ -120,47 +118,47 @@ public:
   isResponsedOrTimeout() const;
 
 protected:
-  virtual void
+  void
   advertiseHandler(const RMSNMsgAdvertise *msg);
-  virtual void
+  void
   gwInfoHandler(const RMSNMsgGwInfo *msg);
-  virtual void
+  void
   connAckHandler(const RMSNMsgConnAck *msg);
-  virtual void
+  void
   willTopicReqHandler(const RMSNMsgHeader *msg);
-  virtual void
+  void
   willMsgReqHandler(const RMSNMsgHeader *msg);
-  virtual void
+  void
   regAckHandler(const RMSNMsgRegAck *msg);
-  virtual void
+  void
   publishHandler(const RMSNMsgPublish *msg);
-  virtual void
+  void
   registerHandler(const RMSNMsgRegister *msg);
-  virtual void
+  void
   pubAckHandler(const RMSNMsgPubAck *msg);
 
 #ifdef USE_QOS2
-  virtual void
+  void
   pubrecHandler(const msg_pubqos2 *msg);
-  virtual void
+  void
   pubrelHandler(const msg_pubqos2 *msg);
-  virtual void
+  void
   pubcompHandler(const msg_pubqos2 *msg);
 
 #endif
-  virtual void
+  void
   subAckHandler(const RMSNMsgSubAck *msg);
-  virtual void
+  void
   unsubAckHandler(const RMSNMsgUnsubAck *msg);
-  virtual void
+  void
   pingReqHandler(const RMSNMsgPingReq *msg);
-  virtual void
+  void
   pingRespHandler();
-  virtual void
+  void
   disconnectHandler(const RMSNMsgDisconnect *msg);
-  virtual void
+  void
   willTopicRespHandler(const RMSNMsgWillTopicResp *msg);
-  virtual void
+  void
   willMsgRespHandler(const RMSNMsgWillMsgResp *msg);
 
   void
@@ -180,6 +178,9 @@ protected:
 private:
   void
   onResponseTimerTimeout();
+
+public:
+  RSignal<void(const RMSNMsgHeader *msg)> received;
 
 private:
   /// Set to valid message type when we're waiting for some sort of

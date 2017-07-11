@@ -2,11 +2,14 @@
 #include <RabirdToolkitConfigNonOS.h>
 #include <RabirdToolkitThirdParties.h>
 #include <RabirdToolkit.h>
+#include <RCoRoutine.h>
 #include <RMqttSN.h>
 
 #include <RApplication.h>
 #include <RThread.h>
 #include <REventLoop.h>
+
+static PT_THREAD(mqttClientProcess(struct pt *pt));
 
 class MqttClient : public RMSNClient
 {
@@ -16,24 +19,33 @@ public:
   }
 
 protected:
-  virtual void
-  pubAckHandler(const RMSNMsgPubAck *msg);
-  virtual void
-  connAckHandler(const RMSNMsgConnAck *msg);
-  virtual void
-  regAckHandler(const RMSNMsgRegAck *msg);
-
-//  virtual void pubackHandler(const RMSNMsgPubAck *msg);
+  void
+  onReceived(const RMSNMsgHeader *msg);
 };
 
-static void
-mqttClientProcess();
+static struct pt sMqttClientPt;
 
 /**
  * @brief sMqttClient
  */
-static MqttClient   sMqttClient(&Serial3);
-static volatile int sProgress = 0;
+static MqttClient *sMqttClient = NULL;
+
+/**
+ * @brief onApplicationIdle
+ */
+static void
+onApplicationIdle()
+{
+  static bool isFinished = false;
+
+  if(!isFinished)
+  {
+    if(PT_EXITED <= mqttClientProcess(&sMqttClientPt))
+    {
+      isFinished = true;
+    }
+  }
+}
 
 int
 rMain(int argc, rfchar *argv[])
@@ -51,62 +63,61 @@ rMain(int argc, rfchar *argv[])
   // Application starts from here!
   RApplication *app = new RApplication();
 
+  PT_INIT(&sMqttClientPt);
+
+  sMqttClient = new MqttClient(&Serial3);
+
   auto eventLoop = app->thread()->eventLoop();
-  eventLoop->idle.connect(&mqttClientProcess);
+  eventLoop->idle.connect(onApplicationIdle);
 
   return 0;
 }
 
-static void
-mqttClientProcess()
+static PT_THREAD(mqttClientProcess(struct pt *pt))
 {
-  if(sMqttClient.responseToWaitFor() != RMSNMT_INVALID)
-  {
-    return;
-  }
+  PT_BEGIN(pt);
 
   // Finished a response, check progress status
-  if(0 == sProgress)
-  {
-    Serial.println(F("Try connect to broker with these settings : "));
-    Serial.println(F("QOS: 0, Keep Alive Interval: 30s, Client ID: Shit007"));
+  Serial.println(F("Try connect to broker with these settings : "));
+  Serial.println(F("QOS: 0, Keep Alive Interval: 30s, Client ID: Shit007"));
 
-    sMqttClient.setQos(RMSN_FLAG_QOS_1);
-    sMqttClient.setClientId("Shit007");
-    sMqttClient.connect();
-    ++sProgress;
-  }
-  else if(1 == sProgress)
+  sMqttClient->setQos(RMSN_FLAG_QOS_1);
+  sMqttClient->setClientId("Shit007");
+  sMqttClient->connect();
+
+  PT_WAIT_UNTIL(pt, sMqttClient->isResponsedOrTimeout());
+
+  if(sMqttClient->isTimeout())
   {
     Serial.println(F("Failed to connect!"));
-    sProgress = 0xff;
+    PT_EXIT(pt);
   }
-  else if(2 == sProgress)
-  {
-    // Just finished a connection
 
-    Serial.println(F("Try to register topic : arse"));
+  // Just finished a connection
 
-    // After connected, we try to register a topic, so that we could publish
-    // to.
-    sMqttClient.registerTopic("arse");
+  Serial.println(F("Try to register topic : arse"));
 
-    ++sProgress;
-  }
-  else if(3 == sProgress)
+  // After connected, we try to register a topic, so that we could publish
+  // to.
+  sMqttClient->registerTopic("arse");
+
+  PT_WAIT_UNTIL(pt, sMqttClient->isResponsedOrTimeout());
+
+  if(sMqttClient->isTimeout())
   {
     Serial.println(F("Failed to register!"));
-    sProgress = 0xff;
+    PT_EXIT(pt);
   }
-  else if(4 == sProgress)
-  {
-    Serial.println(F("Try to publish topic : arse"));
 
-    auto topic = sMqttClient.getTopicByName("arse");
+  Serial.println(F("Try to publish topic : arse"));
+
+  {
+    auto topic = sMqttClient->getTopicByName("arse");
 
     if(NULL == topic)
     {
       Serial.println(F("Failed to register topic : arse"));
+      PT_EXIT(pt);
     }
     else
     {
@@ -115,50 +126,42 @@ mqttClientProcess()
       Serial.print(F("Topic id for \"arse\": "));
       Serial.println(topic->id);
 
-      sMqttClient.publish(topic->id, info, static_cast<uint8_t>(strlen(info)));
-
-      ++sProgress;
+      sMqttClient->publish(topic->id, info, static_cast<uint8_t>(strlen(info)));
     }
   }
-  else if(5 == sProgress)
+
+  PT_WAIT_UNTIL(pt, sMqttClient->isResponsedOrTimeout());
+
+  if(sMqttClient->isTimeout())
   {
     Serial.println(F("Failed to publish!"));
-    sProgress = 0xff;
+    PT_EXIT(pt);
   }
-  else if(6 == sProgress)
+
+  Serial.println(F("Publish finished."));
+
+  sMqttClient->disconnect(5);
+
+  PT_WAIT_UNTIL(pt, sMqttClient->isResponsedOrTimeout());
+
+  Serial.println(F("Disconnect"));
+
+  PT_END(pt);
+}
+
+void
+MqttClient::onReceived(const RMSNMsgHeader *msg)
+{
+  if(msg->type == RMSNMT_PUBACK)
   {
-    Serial.println(F("Publish finished."));
-
-    sMqttClient.disconnect(5);
-
-    Serial.println(F("Disconnect"));
-    sProgress = 0xff;
+    Serial.println(F("Published!"));
   }
-}
-
-void
-MqttClient::pubAckHandler(const RMSNMsgPubAck *msg)
-{
-  RMSNClient::pubAckHandler(msg);
-
-  Serial.println(F("Published!"));
-  ++sProgress;
-}
-
-void
-MqttClient::connAckHandler(const RMSNMsgConnAck *msg)
-{
-  RMSNClient::connAckHandler(msg);
-
-  Serial.println(F("Connected!"));
-  ++sProgress;
-}
-
-void
-MqttClient::regAckHandler(const RMSNMsgRegAck *msg)
-{
-  RMSNClient::regAckHandler(msg);
-
-  Serial.println(F("Registerred!"));
-  ++sProgress;
+  else if(msg->type == RMSNMT_CONNACK)
+  {
+    Serial.println(F("Connected!"));
+  }
+  else if(msg->type == RMSNMT_REGACK)
+  {
+    Serial.println(F("Registerred!"));
+  }
 }
