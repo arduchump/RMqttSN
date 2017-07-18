@@ -28,6 +28,7 @@
 #include <RCoreApplication.h>
 #include <REventLoop.h>
 #include <RThread.h>
+#include <RByteOrder.h>
 #include "RMSNClient.h"
 #include "RMSNUtils.h"
 
@@ -66,12 +67,6 @@ uint8_t
 RMSNClient::qos()
 {
   return mFlags & RMSN_QOS_MASK;
-}
-
-uint16_t
-RMSNClient::bswap(const uint16_t val)
-{
-  return (val << 8) | (val >> 8);
 }
 
 void
@@ -424,9 +419,9 @@ RMSNClient::regAckHandler(const RMSNMsgRegAck *msg)
   if((msg->returnCode == 0)
      && (mTopicCount > 0)
      && (mTopicCount < RMSN_MAX_TOPICS)
-     && bswap(msg->messageId) == mMessageId)
+     && rNtohs(msg->messageId) == mMessageId)
   {
-    const uint16_t topicId = bswap(msg->topicId);
+    const uint16_t topicId = rNtohs(msg->topicId);
 
     if(NULL == getTopicById(topicId))
     {
@@ -492,7 +487,7 @@ RMSNClient::publishHandler(const RMSNMsgPublish *msg)
   {
     RMSNReturnCode ret = RMSNRC_REJECTED_INVALID_TOPIC_ID;
 
-    if(getTopicById(bswap(msg->topicId)))
+    if(getTopicById(rNtohs(msg->topicId)))
     {
       ret = RMSNRC_ACCEPTED;
     }
@@ -505,7 +500,7 @@ void
 RMSNClient::registerHandler(const RMSNMsgRegister *msg)
 {
   RMSNReturnCode ret     = RMSNRC_REJECTED_INVALID_TOPIC_ID;
-  uint16_t       topicId = bswap(msg->topicId);
+  uint16_t       topicId = rNtohs(msg->topicId);
 
   auto topic = getTopicByName(msg->topicName);
 
@@ -552,7 +547,7 @@ RMSNClient::connect()
   msg->type       = RMSNMT_CONNECT;
   msg->flags      = mFlags;
   msg->protocolId = RMSN_PROTOCOL_ID;
-  msg->duration   = bswap(mKeepAliveInterval);
+  msg->duration   = rHtons(mKeepAliveInterval);
 
   fmsnSafeCopyText(msg->clientId, mClientId.c_str(),
                    RMSN_GET_MAX_DATA_SIZE(RMSNMsgConnect));
@@ -615,7 +610,7 @@ RMSNClient::disconnect(const uint16_t duration)
   if(duration > 0)
   {
     msg->length  += sizeof(RMSNMsgDisconnect);
-    msg->duration = bswap(duration);
+    msg->duration = rHtons(duration);
   }
 
   sendMessage();
@@ -647,7 +642,7 @@ RMSNClient::registerTopic(const char *name)
     msg->length    = sizeof(RMSNMsgRegister) + strlen(name);
     msg->type      = RMSNMT_REGISTER;
     msg->topicId   = 0;
-    msg->messageId = bswap(mMessageId);
+    msg->messageId = rHtons(mMessageId);
     fmsnSafeCopyText(msg->topicName, name,
                      RMSN_GET_MAX_DATA_SIZE(RMSNMsgRegister));
 
@@ -667,8 +662,8 @@ RMSNClient::regAck(const uint16_t topicId, const uint16_t messageId,
 
   msg->length     = sizeof(RMSNMsgRegAck);
   msg->type       = fmsnGetRespondType(RMSNMT_REGISTER);
-  msg->topicId    = bswap(topicId);
-  msg->messageId  = bswap(messageId);
+  msg->topicId    = rHtons(topicId);
+  msg->messageId  = rHtons(messageId);
   msg->returnCode = returnCode;
 
   sendMessage();
@@ -692,8 +687,8 @@ RMSNClient::publish(const uint16_t topicId, const void *data,
 
   msg->flags = mFlags;
 
-  msg->topicId   = bswap(topicId);
-  msg->messageId = bswap(mMessageId);
+  msg->topicId   = rHtons(topicId);
+  msg->messageId = rHtons(mMessageId);
   memcpy(msg->data, data, dataLen);
 
   sendMessage();
@@ -751,8 +746,8 @@ RMSNClient::pubAck(const uint16_t topicId, const uint16_t messageId,
 
   msg->length     = sizeof(RMSNMsgPubAck);
   msg->type       = fmsnGetRespondType(RMSNMT_PUBLISH);
-  msg->topicId    = bswap(topicId);
-  msg->messageId  = bswap(messageId);
+  msg->topicId    = rHtons(topicId);
+  msg->messageId  = rHtons(messageId);
   msg->returnCode = returnCode;
 
   sendMessage();
@@ -770,7 +765,7 @@ RMSNClient::subscribeByName(const char *topicName)
   msg->length    = sizeof(RMSNMsgSubscribe) + strlen(topicName) - 2;
   msg->type      = RMSNMT_SUBSCRIBE;
   msg->flags     = qos() | RMSN_FLAG_TOPIC_NAME;
-  msg->messageId = bswap(mMessageId);
+  msg->messageId = rHtons(mMessageId);
   fmsnSafeCopyText(msg->topicName, topicName, RMSN_GET_MAX_DATA_SIZE(
                      RMSNMsgSubscribe) - 2);
 
@@ -792,8 +787,8 @@ RMSNClient::subscribeById(const uint16_t topicId)
   msg->length    = sizeof(RMSNMsgSubscribe);
   msg->type      = RMSNMT_SUBSCRIBE;
   msg->flags     = qos() | RMSN_FLAG_TOPIC_PREDEFINED_ID;
-  msg->messageId = bswap(mMessageId);
-  msg->topicId   = bswap(topicId);
+  msg->messageId = rHtons(mMessageId);
+  msg->topicId   = rHtons(topicId);
 
   sendMessage();
 
@@ -816,7 +811,7 @@ RMSNClient::unsubscribeByName(const char *topicName)
   msg->length    = sizeof(RMSNMsgUnsubscribe) + strlen(topicName) - 2;
   msg->type      = RMSNMT_UNSUBSCRIBE;
   msg->flags     = qos() | RMSN_FLAG_TOPIC_NAME;
-  msg->messageId = bswap(mMessageId);
+  msg->messageId = rHtons(mMessageId);
   fmsnSafeCopyText(msg->topicName, topicName,
                    RMSN_GET_MAX_DATA_SIZE(RMSNMsgUnsubscribe) - 2);
 
@@ -839,8 +834,8 @@ RMSNClient::unsubscribeById(const uint16_t topicId)
   msg->length    = sizeof(RMSNMsgUnsubscribe);
   msg->type      = RMSNMT_UNSUBSCRIBE;
   msg->flags     = qos() | RMSN_FLAG_TOPIC_PREDEFINED_ID;
-  msg->messageId = bswap(mMessageId);
-  msg->topicId   = bswap(topicId);
+  msg->messageId = rHtons(mMessageId);
+  msg->topicId   = rHtons(topicId);
 
   sendMessage();
 

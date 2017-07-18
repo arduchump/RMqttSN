@@ -178,8 +178,6 @@ protected:
 
   void
   dispatch();
-  uint16_t
-  bswap(const uint16_t val);
   void
   sendMessage();
 
