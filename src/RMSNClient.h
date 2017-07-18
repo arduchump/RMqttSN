@@ -69,6 +69,14 @@ public:
           const bool update=false);
   bool
   registerTopic(const char *name);
+
+  /**
+   * @brief publish
+   *
+   * @param topicId It should be predefined id if publish with QOS -1.
+   * @param data
+   * @param dataLen
+   */
   void
   publish(const uint16_t topicId, const void *data, const uint8_t dataLen);
 #ifdef USE_QOS2

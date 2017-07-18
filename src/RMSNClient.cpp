@@ -682,9 +682,16 @@ RMSNClient::publish(const uint16_t topicId, const void *data,
 
   RMSNMsgPublish *msg = reinterpret_cast<RMSNMsgPublish *>(mMessageBuffer);
 
-  msg->length    = sizeof(RMSNMsgPublish) + dataLen;
-  msg->type      = RMSNMT_PUBLISH;
-  msg->flags     = mFlags;
+  msg->length = sizeof(RMSNMsgPublish) + dataLen;
+  msg->type   = RMSNMT_PUBLISH;
+
+  if(qos() == RMSN_FLAG_QOS_M1)
+  {
+    mFlags |= RMSN_FLAG_TOPIC_PREDEFINED_ID;
+  }
+
+  msg->flags = mFlags;
+
   msg->topicId   = bswap(topicId);
   msg->messageId = bswap(mMessageId);
   memcpy(msg->data, data, dataLen);
