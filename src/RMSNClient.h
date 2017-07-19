@@ -38,8 +38,14 @@
 class RMSNClient : public RObject
 {
 public:
-  RMSNClient(Stream *stream);
+  RMSNClient();
   ~RMSNClient();
+
+  void
+  begin(Stream *stream);
+
+  void
+  end();
 
   void
   setQos(uint8_t qos);

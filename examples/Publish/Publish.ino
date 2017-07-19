@@ -14,7 +14,7 @@ static PT_THREAD(mqttClientProcess(struct pt *pt));
 class MqttClient : public RMSNClient
 {
 public:
-  MqttClient(Stream *stream) : RMSNClient(stream)
+  MqttClient() : RMSNClient()
   {
   }
 
@@ -65,7 +65,8 @@ rMain(int argc, rfchar *argv[])
 
   PT_INIT(&sMqttClientPt);
 
-  sMqttClient = new MqttClient(&Serial3);
+  sMqttClient = new MqttClient();
+  sMqttClient->begin(&Serial3);
 
   auto eventLoop = app->thread()->eventLoop();
   eventLoop->idle.connect(onApplicationIdle);

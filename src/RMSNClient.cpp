@@ -32,7 +32,7 @@
 #include "RMSNClient.h"
 #include "RMSNUtils.h"
 
-RMSNClient::RMSNClient(Stream *stream) :
+RMSNClient::RMSNClient() :
   mResponseToWaitFor(RMSNMT_INVALID),
   mMessageId(0),
   mTopicCount(0),
@@ -40,7 +40,7 @@ RMSNClient::RMSNClient(Stream *stream) :
   mFlags(RMSN_FLAG_QOS_0),
   mIsTimeout(false),
   mKeepAliveInterval(30),
-  mStream(stream),
+  mStream(NULL),
   mResponseRetries(0)
 {
   memset(mTopicTable, 0, sizeof(RMSNTopic) * RMSN_MAX_TOPICS);
@@ -54,6 +54,17 @@ RMSNClient::RMSNClient(Stream *stream) :
 }
 
 RMSNClient::~RMSNClient()
+{
+}
+
+void
+RMSNClient::begin(Stream *stream)
+{
+  mStream = stream;
+}
+
+void
+RMSNClient::end()
 {
 }
 
