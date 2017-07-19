@@ -121,6 +121,12 @@ RMSNClient::getTopicById(const uint16_t &id) const
 void
 RMSNClient::parseStream()
 {
+  if(!mStream)
+  {
+    // Only check stream when it valid.
+    return;
+  }
+
   if(mStream->available() > 0)
   {
     uint8_t *response     = mResponseBuffer;
