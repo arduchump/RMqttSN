@@ -762,7 +762,8 @@ RMSNClient::subscribeByName(const char *topicName)
 
   // The -2 here is because we're unioning a 0-length member (topicName)
   // with a uint16_t in the msg_subscribe struct.
-  msg->length    = sizeof(RMSNMsgSubscribe) + strlen(topicName) - 2;
+  msg->length = sizeof(RMSNMsgSubscribe)
+                + static_cast<uint8_t>(strlen(topicName) - 2);
   msg->type      = RMSNMT_SUBSCRIBE;
   msg->flags     = qos() | RMSN_FLAG_TOPIC_NAME;
   msg->messageId = rHtons(mMessageId);
@@ -808,7 +809,8 @@ RMSNClient::unsubscribeByName(const char *topicName)
 
   // The -2 here is because we're unioning a 0-length member (topicName)
   // with a uint16_t in the msg_unsubscribe struct.
-  msg->length    = sizeof(RMSNMsgUnsubscribe) + strlen(topicName) - 2;
+  msg->length = sizeof(RMSNMsgUnsubscribe)
+                + static_cast<uint8_t>(strlen(topicName) - 2);
   msg->type      = RMSNMT_UNSUBSCRIBE;
   msg->flags     = qos() | RMSN_FLAG_TOPIC_NAME;
   msg->messageId = rHtons(mMessageId);
@@ -850,7 +852,7 @@ RMSNClient::pingReq(const char *clientId)
 {
   RMSNMsgPingReq *msg = reinterpret_cast<RMSNMsgPingReq *>(mMessageBuffer);
 
-  msg->length = sizeof(RMSNMsgPingReq) + strlen(clientId);
+  msg->length = sizeof(RMSNMsgPingReq) + static_cast<uint8_t>(strlen(clientId));
   msg->type   = RMSNMT_PINGREQ;
   fmsnSafeCopyText(msg->clientId, clientId,
                    RMSN_GET_MAX_DATA_SIZE(RMSNMsgPingReq));
