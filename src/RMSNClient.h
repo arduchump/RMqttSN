@@ -106,7 +106,7 @@ public:
   void
   pingResp();
   void
-  disconnect(const uint16_t duration);
+  disconnect(const uint16_t duration=0);
 
   void
   startResponseTimer();
