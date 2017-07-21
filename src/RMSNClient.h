@@ -36,6 +36,7 @@
 #define RMSN_MAX_BUFFER_SIZE 66
 #define RMSN_GET_MAX_DATA_SIZE(headerClass) \
   ((size_t)(RMSN_MAX_BUFFER_SIZE - sizeof(headerClass)))
+#define RMSN_MAX_CLIENT_ID_LEN 23
 
 class RMSNClient : public RObject
 {
