@@ -47,6 +47,13 @@ RMSNClient::RMSNClient() :
   memset(mMessageBuffer, 0, RMSN_MAX_BUFFER_SIZE);
   memset(mResponseBuffer, 0, RMSN_MAX_BUFFER_SIZE);
 
+  {
+    auto headerSize = sizeof(RMSNMsgPublish);
+
+    mPubPayloadStream.setBuffer(
+      mMessageBuffer + headerSize, RMSN_MAX_BUFFER_SIZE - headerSize);
+  }
+
   mResponseTimer.setSingleShot(false);
   mResponseTimer.setInterval(RMSN_T_RETRY * 1000L);
   R_CONNECT(&mResponseTimer, timeout, this, onResponseTimerTimeout);
@@ -347,6 +354,12 @@ RMSNClient::sendMessage()
     // Cheesy hack to ensure two messages don't run-on into one send.
 //        delay(10);
   }
+}
+
+RBufferStream *
+RMSNClient::pubPayloadStream()
+{
+  return &mPubPayloadStream;
 }
 
 bool
@@ -910,4 +923,45 @@ RMSNClient::onResponseTimerTimeout()
 
   sendMessage();
   --mResponseRetries;
+}
+
+RMSNPublisher
+RMSNClient::publish(const uint16_t topicId)
+{
+  ++mMessageId;
+
+  RMSNMsgPublish *msg = reinterpret_cast<RMSNMsgPublish *>(mMessageBuffer);
+
+  // Data length will be append in the publishEnd()
+  msg->length = sizeof(RMSNMsgPublish);
+  msg->type   = RMSNMT_PUBLISH;
+
+  if(qos() == RMSN_FLAG_QOS_M1)
+  {
+    mFlags |= RMSN_FLAG_TOPIC_PREDEFINED_ID;
+  }
+
+  msg->flags = mFlags;
+
+  msg->topicId   = rHtons(topicId);
+  msg->messageId = rHtons(mMessageId);
+
+  mPubPayloadStream.reset();
+
+  return RMSNPublisher(this);
+}
+
+void
+RMSNClient::publishEnd()
+{
+  RMSNMsgPublish *msg = reinterpret_cast<RMSNMsgPublish *>(mMessageBuffer);
+
+  msg->length += mPubPayloadStream.pos();
+
+  sendMessage();
+
+  if(fmsnIsHighQos(qos()))
+  {
+    mResponseToWaitFor = fmsnGetRespondType(RMSNMT_PUBLISH);
+  }
 }

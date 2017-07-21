@@ -27,8 +27,10 @@
 #define __INCLUDED_E457D8FE526A11E7AA6EA088B4D1658C
 
 #include "RMSNTypes.h"
+#include "RMSNPublisher.h"
 #include <RTimer.h>
 #include <RSignal.h>
+#include <RBufferStream.h>
 
 #define RMSN_MAX_TOPICS      10
 #define RMSN_MAX_BUFFER_SIZE 66
@@ -131,7 +133,16 @@ public:
   bool
   isResponsedOrTimeout() const;
 
+  RMSNPublisher
+  publish(const uint16_t topicId);
+
 protected:
+  void
+  publishEnd();
+
+  RBufferStream *
+  pubPayloadStream();
+
   void
   advertiseHandler(const RMSNMsgAdvertise *msg);
   void
@@ -197,13 +208,14 @@ public:
 private:
   /// Set to valid message type when we're waiting for some sort of
   /// acknowledgement from the server that will transition our state.
-  uint8_t   mResponseToWaitFor;
-  uint16_t  mMessageId;
-  uint8_t   mTopicCount;
-  uint8_t   mMessageBuffer[RMSN_MAX_BUFFER_SIZE];
-  uint8_t   mResponseBuffer[RMSN_MAX_BUFFER_SIZE];
-  RMSNTopic mTopicTable[RMSN_MAX_TOPICS];
-  uint8_t   mGatewayId;
+  uint8_t       mResponseToWaitFor;
+  uint16_t      mMessageId;
+  uint8_t       mTopicCount;
+  uint8_t       mMessageBuffer[RMSN_MAX_BUFFER_SIZE];
+  uint8_t       mResponseBuffer[RMSN_MAX_BUFFER_SIZE];
+  RBufferStream mPubPayloadStream;
+  RMSNTopic     mTopicTable[RMSN_MAX_TOPICS];
+  uint8_t       mGatewayId;
   /// Default flags
   uint8_t mFlags;
 
@@ -221,6 +233,8 @@ private:
   String  mClientId;
   RTimer  mResponseTimer;
   uint8_t mResponseRetries;
+
+  friend RMSNPublisher;
 };
 
 #endif // __INCLUDED_E457D8FE526A11E7AA6EA088B4D1658C
