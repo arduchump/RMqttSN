@@ -710,12 +710,12 @@ RMSNClient::publish(const uint16_t topicId, const void *data,
   msg->length = sizeof(RMSNMsgPublish) + dataLen;
   msg->type   = RMSNMT_PUBLISH;
 
+  msg->flags = mFlags;
+
   if(qos() == RMSN_FLAG_QOS_M1)
   {
-    mFlags |= RMSN_FLAG_TOPIC_PREDEFINED_ID;
+    msg->flags |= RMSN_FLAG_TOPIC_PREDEFINED_ID;
   }
-
-  msg->flags = mFlags;
 
   msg->topicId   = rHtons(topicId);
   msg->messageId = rHtons(mMessageId);
@@ -935,13 +935,12 @@ RMSNClient::publish(const uint16_t topicId)
   // Data length will be append in the publishEnd()
   msg->length = sizeof(RMSNMsgPublish);
   msg->type   = RMSNMT_PUBLISH;
+  msg->flags  = mFlags;
 
   if(qos() == RMSN_FLAG_QOS_M1)
   {
-    mFlags |= RMSN_FLAG_TOPIC_PREDEFINED_ID;
+    msg->flags |= RMSN_FLAG_TOPIC_PREDEFINED_ID;
   }
-
-  msg->flags = mFlags;
 
   msg->topicId   = rHtons(topicId);
   msg->messageId = rHtons(mMessageId);
