@@ -956,7 +956,7 @@ RMSNClient::publishEnd()
 {
   RMSNMsgPublish *msg = reinterpret_cast<RMSNMsgPublish *>(mMessageBuffer);
 
-  msg->length += mPubPayloadStream.pos();
+  msg->length += mPubPayloadStream.available();
 
   sendMessage();
 
