@@ -107,8 +107,8 @@ enum RMSNMsgType
  */
 struct RMSNMsgHeader
 {
-  uint8_t     length;
-  RMSNMsgType type;
+  uint8_t length;
+  uint8_t type; ///< RMSNMsgType
 } RMSN_STRUCT_PACKED;
 
 /**
@@ -153,7 +153,7 @@ struct RMSNMsgConnect :  public RMSNMsgHeader
  */
 struct RMSNMsgConnAck :  public RMSNMsgHeader
 {
-  RMSNReturnCode returnCode;
+  uint8_t returnCode; ///< RMSNReturnCode
 } RMSN_STRUCT_PACKED;
 
 /**
@@ -188,9 +188,9 @@ struct RMSNMsgRegister :  public RMSNMsgHeader
  */
 struct RMSNMsgRegAck :  public RMSNMsgHeader
 {
-  uint16_t       topicId;
-  uint16_t       messageId;
-  RMSNReturnCode returnCode;
+  uint16_t topicId;
+  uint16_t messageId;
+  uint8_t  returnCode; ///< RMSNReturnCode
 } RMSN_STRUCT_PACKED;
 
 /**
@@ -209,9 +209,9 @@ struct RMSNMsgPublish :  public RMSNMsgHeader
  */
 struct RMSNMsgPubAck :  public RMSNMsgHeader
 {
-  uint16_t       topicId;
-  uint16_t       messageId;
-  RMSNReturnCode returnCode;
+  uint16_t topicId;
+  uint16_t messageId;
+  uint8_t  returnCode; ///< RMSNReturnCode
 } RMSN_STRUCT_PACKED;
 
 /**
@@ -242,10 +242,10 @@ struct RMSNMsgSubscribe :  public RMSNMsgHeader
  */
 struct RMSNMsgSubAck :  public RMSNMsgHeader
 {
-  uint8_t        flags;
-  uint16_t       topicId;
-  uint16_t       messageId;
-  RMSNReturnCode returnCode;
+  uint8_t  flags;
+  uint16_t topicId;
+  uint16_t messageId;
+  uint8_t  returnCode; ///< RMSNReturnCode
 } RMSN_STRUCT_PACKED;
 
 /**
@@ -292,7 +292,7 @@ struct RMSNMsgDisconnect :  public RMSNMsgHeader
  */
 struct RMSNMsgWillTopicResp :  public RMSNMsgHeader
 {
-  RMSNReturnCode returnCode;
+  uint8_t returnCode; ///< RMSNReturnCode
 } RMSN_STRUCT_PACKED;
 
 /**
@@ -300,7 +300,7 @@ struct RMSNMsgWillTopicResp :  public RMSNMsgHeader
  */
 struct RMSNMsgWillMsgResp :  public RMSNMsgHeader
 {
-  RMSNReturnCode returnCode;
+  uint8_t returnCode; ///< RMSNReturnCode
 } RMSN_STRUCT_PACKED;
 
 /**
